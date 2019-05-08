@@ -62,6 +62,9 @@ class Brain:
         # special if object is pandas
         # special if object is numpy 
 
+    def __setitem__(self, name, item):
+        self.learn(item, name)
+
     def recall(self,name):
         '''get an object value based on its Brain name'''
         names_ = brain_names_ids(self.client)
@@ -69,6 +72,9 @@ class Brain:
         brain_name_error(name,self.client)        
         return self.client.get(this_id,timeout_ms=100)
     
+    def __getitem__(self, name):
+        return self.recall(name)
+
     def info(self,name):
         '''return metadata object based on its Brain name'''
         names_ = brain_names_objects(self.client)
