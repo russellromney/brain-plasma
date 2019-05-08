@@ -1,9 +1,22 @@
-# dash-brain
+# brain-plasma
 Sharing data between callbacks, on Apache Plasma. Built for Dash, useful anywhere. 
 
 ---
 
-`pybrain` is a high-level wrapper for the Apache Plasma PlasmaClient API with an added object naming, reference, and changing system.
+`brain-plasma` is a high-level wrapper for the Apache Plasma PlasmaClient API with an added object naming, reference, and changing system.
+
+### Key Features
+
+1. Create and reference named shared-memory Python objects
+2. Change the value of those shared-memory Python objects
+3. Thread-safe: it doesn't matter if the processes or threads sharing the `Brain` object share memory or not; the namespace is also stored in Plasma and checked each time any object is referenced.
+4. Store large objects, especially Pandas and NumPy objects, in the backend
+5. Access those objects very quickly - faster than Parquet. Pulling ~10,000,000 row Pandas object takes about .45 seconds, storing it takes about 1 second. Instantaneous for most objects of reasonable size, including Pandas up to ~200,000 rows.
+
+**Current Drawbacks**
+
+4. (3.) above slows the `Brain` down, minutely...but it makes it safe for programs that don't share memory. This only becomes a problem if there are thousands of variables that need to be parsed each time, but even then it's still a small fraction of a second.
+6. Limited to Arrow-serializable objects.
 
 ### Basic Usage
 
@@ -41,20 +54,6 @@ brain.recall('this')
 brain.names()
 > ['that','those']
 ```
-
-### Key Features
-
-1. Create and reference named shared-memory Python objects
-2. Change the value of those shared-memory Python objects
-3. Thread-safe: it doesn't matter if the processes or threads sharing the `Brain` object share memory or not; the namespace is also stored in Plasma and checked each time any object is referenced.
-4. Store large objects, especially Pandas and NumPy objects, in the backend
-5. Access those objects very quickly - faster than Parquet. Pulling ~10,000,000 row Pandas object takes about .45 seconds, storing it takes about 1 second. Instantaneous for most objects of reasonable size, including Pandas up to ~200,000 rows.
-
-**Current Drawbacks**
-
-4. (3.) above slows the `Brain` down, minutely...but it makes it safe for programs that don't share memory. This only becomes a problem if there are thousands of variables that need to be parsed each time, but even then it's still a small fraction of a second.
-6. Limited to Arrow-serializable objects.
-
 
 ### Basic API Reference for `brain_plasma.Brain`
 
