@@ -9,7 +9,7 @@ Sharing data between callbacks, on Apache Plasma. Built for Dash, useful anywher
 
 1. Create and reference named shared-memory Python objects
 2. Change the value of those shared-memory Python objects
-3. Thread-safe: it doesn't matter if the processes or threads sharing the `Brain` object share memory or not; the namespace is also stored in Plasma and checked each time any object is referenced.
+3. Thread-safe: it doesn't matter if the processes or threads sharing the `Brain` object share memory or not; the namespace is only stored in Plasma and checked each time any object is referenced.
 4. Store large objects, especially Pandas and NumPy objects, in the backend
 5. Access those objects very quickly - faster than Parquet. Pulling ~10,000,000 row Pandas object takes about .45 seconds, storing it takes about 1 second. Instantaneous for most objects of reasonable size, including Pandas up to ~200,000 rows.
 
