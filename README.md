@@ -70,6 +70,8 @@ brain.names()
 * change the size of the `plasma_store`
 * ability to persist items on disk and recall them with the same API
 * specify which objects cannot be used due to serialization constraints
+* ability to dump all/specific objects and name reference to a standard disk location
+  * plus ability to recover these changes later - maybe make it standard behaviour to check the standard location
 
 ### Basic API Reference for `brain_plasma.Brain`
 
