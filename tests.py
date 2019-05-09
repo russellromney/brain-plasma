@@ -1,30 +1,23 @@
-from dash_brain import Brain,subprocess
+from brain_plasma import Brain
 import json
 import pandas as pd
 import numpy as np
+import os
 
 # create a Brain with no store running
-#brain = Brain(start_process=True)
+brain = Brain(start_process=True)
 
 # shut down the Brain
-#brain.dead(i_am_sure=True)
+brain.dead(i_am_sure=True)
 
 # create a Brain with a store running
-# print('starting plasma state')
-# proc = subprocess.run([
-#         'plasma_store',
-#         '-m',
-#         '{}'.format(50000000),
-#         '-s',
-#         '{}'.format('/tmp/plasma'),
-#         '&',
-#         'disown'
-#     ])
+print('starting plasma_state')
+os.system('plasma_store -m {} -s {} & disown'.format(50000000,'/tmp/plasma'))
 brain = Brain()
-#brain.dead(i_am_sure=True)
+brain.dead(i_am_sure=True)
 
 # create a store of nonstandard size
-#brain = Brain(start_process=True, size=75000000)
+brain = Brain(start_process=True, size=75000000)
 
 # create python objects
 a = dict(this=[1,2,3,4],that=[2,3,4,5])
@@ -129,6 +122,16 @@ brain.sleep()
 brain.wake_up()
 
 # kill the brain
-brain.dead()
+brain.dead(i_am_sure=True)
+
+# make sure that the underlying process doesn't work
+try:
+    brain = Brain()
+except:
+    pass
+
+# start the brain after killing plasma_store; use new size, and path
+brain.start(size=75000000,path='/tmp/plasma1')
+assert brain.size==75000000
 
 print('dash-brain tests passed!')

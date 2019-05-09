@@ -15,23 +15,22 @@ class Brain:
         self,
         # TODO connect=True
         path="/tmp/plasma",
-        # TODO size=50000000, # 50MB
-        # TODO start_process=False # start plasma_store ?
+        size=50000000, # 50MB
+        start_process=False # start plasma_store ?
     ):
         self.path = path
+        self.size = size
+        self.mb = '{} MB'.format(round(size/1000000))
         # start plasma_store if necessary
-        # TODO
-        # if start_process:
-        #     # start the plasma_client
-        #     proc = subprocess.run([
-        #             'plasma_store',
-        #             '-m',
-        #             '{}'.format(size),
-        #             '-s',
-        #             '{} & disown'.format(self.path),
-        #         ])
-        #     if not proc.returncode:
-        #         raise BaseException('BrainError: could not start plasma_store; here is the error message:\n{}',format(proc.stderr))
+        if start_process:
+            # start the plasma_client - if there is one running at that path, shut it down and restart it with the current size
+            try:
+                os.system('plasma_store -m {} -s {} & disown'.format(self.size,self.path))
+            except:
+                os.system('pkill plasma_store')
+                os.system('plasma_store -m {} -s {} & disown'.format(self.size,self.path))
+            # if not proc.returncode:
+            #     raise BaseException('BrainError: could not start plasma_store; here is the error message:\n{}',format(proc.stderr))
         self.client = plasma.connect(self.path)
 
     ### core functions
@@ -52,6 +51,10 @@ class Brain:
             'name_id':name_id.binary()
         }
         
+        # check if name is already taken; if it is, delete its value stored at its ObjectID and delete its brain_object name index
+        if brain_name_exists(name,self.client):
+            self.forget(name)
+
         ### store them
         # put the thing to store
         self.client.put(thing,this_id)
@@ -107,18 +110,27 @@ class Brain:
 
     def knowledge(self):
         '''return a dictionary of all names and ids that brain knows'''
-        names_ = brain_names_objects(self.client)
-        return {x['name']:plasma.ObjectID(x['id']) for x in names_}
-
+        return brain_names_objects(self.client)
+        
+    def start(self,path=None,size=None):
+        '''start plasma_store again if it is dead'''
+        try:
+            # test to see if the client is connected to a plasma_store
+            temp = brain.client.put(5)
+            brain.client.delete(temp)
+        except:
+            # if not, connect it
+            if size!=None:
+                self.size = size
+            if path!=None:
+                self.path = path
+            os.system('plasma_store -m {} -s {} & disown'.format(self.size,self.path))
+            self.wake_up()
+            
     def dead(self,i_am_sure=True):
         '''pkill the plasma_store process'''
         self.client.disconnect() 
-        subprocess.run([
-            'pkill',
-            'plasma_store',
-        ])
-        # if not proc.returncode:
-        #     raise BaseException('BrainError: could not kill plasma_store process; here is the error message:\n{}',format(proc.stderr))
+        os.system('pkill plasma_store')
     
     def sleep(self):
         '''disconnect from the client'''
@@ -126,8 +138,7 @@ class Brain:
 
     def wake_up(self):
         '''reconnect to the client'''
-        self.client = plasma.connect(self.path)
-        
+        self.client = plasma.connect(self.path)    
 
     # def brain_size(self):
     #     '''return the total memory allocated to the store'''

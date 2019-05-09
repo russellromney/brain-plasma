@@ -1,5 +1,5 @@
 # brain-plasma
-Sharing data between callbacks, on Apache Plasma. Built for Dash, useful anywhere. 
+Sharing data between callbacks, on Apache Plasma. Built for Dash, useful anywhere. Only supported on Mac/Linux for now.
 
 ---
 
@@ -30,7 +30,7 @@ $ plasma_store -m 50000000 -s /tmp/plasma & disown
 
 ```
 from brain_plasma import Brain
-brain = Brain()
+brain = Brain(start_process=True)
 
 this = 'a text object'
 that = [1,2,3,4]
@@ -57,23 +57,17 @@ brain.names()
 > ['that','those']
 ```
 
-### TODO
+### API Reference for `brain_plasma.Brain`
 
-* multiple assignment
-  * this is actually very easy, as the underlying PlasmaClient API already supports this.
-* multiple namespaces
-  * i.e. `brain` and `brain_` can be in the same shared memory space without sharing a namespace
-  * `brain = Brain(namespace='app1')` changes the "names" prefix to some custom thing
-* launch the `plasma_store` from a `Brain` instance
-  * I built this using `subprocess` but it won't run in the background.
-* do special things optimizing the PlasmaClient interactions with NumPy and Pandas objects
-* change the size of the `plasma_store`
-* ability to persist items on disk and recall them with the same API
-* specify which objects cannot be used due to serialization constraints
-* ability to dump all/specific objects and name reference to a standard disk location
-  * plus ability to recover these changes later - maybe make it standard behaviour to check the standard location
+**Initialization**
 
-### Basic API Reference for `brain_plasma.Brain`
+`brain = Brain(path="/tmp/plasma", start_process=False, size=50000000)`
+
+Parameters:
+
+* `path` - which path to use to start and/or connect to the plasma store
+* `start_process` - whether or not to start a new process at that path. Kills existing process if it exists.
+* `size` - number of bytes that the plasma_store can use
 
 **Attributes**
 
@@ -84,6 +78,18 @@ The underlying PlasmaClient instance. Created at instantiation. Requires plasma_
 `Brain.path`
 
 The path to the PlasmaClient connection folder. Default is `/tmp/plasma` but can be changed by using `brain = Brain(path='/my/new/path')`
+
+`Brain.size`
+
+int - number of bytes available in the plasma_store, e.g. `50000000`
+
+`Brain.mb`
+
+str - number of mb available, e.g. `'50 MB'`
+
+NOTE: brain.size and brain.mb ARE NOT ACCURATE if:
+a. you have used `brain.start()` without specifying the size. 
+b. you specify size in `brain = Brain()` but do not specify `start_process=True`
 
 **Methods**
 
@@ -127,9 +133,38 @@ Disconnect `Brain.client` from Plasma. Must use `Brain.wake_up()` to use the `Br
 
 Reconnect `Brain.client` to Plasma.
 
-`Brain.dead()`
+`Brain.start(path=None,size=None)`
 
-Disconnect `Brain.client` and kill the `plasma_store` process with `$ pkill plasma_store`
+Restarts the `plasma_store` process for a dead `Brain`. NOTE: DOES NOT RESTART AN EXISTING PLASMA_STORE AT THAT PATH.
+
+`Brain.dead(i_am_sure=False)`
+
+If i_am_sure==True, disconnect `Brain.client` and kill the `plasma_store` process with `$ pkill plasma_store`
+
+---
+
+### Notes and TODO
+
+Apache PlasmaClient API reference: https://arrow.apache.org/docs/python/generated/pyarrow.plasma.PlasmaClient.html#pyarrow.plasma.PlasmaClient
+
+Apache Plasma docs: https://arrow.apache.org/docs/python/plasma.html#
+
+**TODO**
+
+* multiple assignment
+  * this is actually very easy, as the underlying PlasmaClient API already supports this.
+* multiple namespaces
+  * i.e. `brain` and `brain_` can be in the same shared memory space without sharing a namespace
+  * `brain = Brain(namespace='app1')` changes the "names" prefix to some custom thing
+- [x] launch the `plasma_store` from a `Brain` instance
+  - ~~I built this using `subprocess` but it won't run in the background.~~~ rebuilt using `os.system` and it works fine
+* do special things optimizing the PlasmaClient interactions with NumPy and Pandas objects
+* change the size of the `plasma_store` but maintain current namespace(s)
+* ability to persist items on disk and recall them with the same API
+* specify in docs which objects cannot be used due to serialization constraints
+* ability to dump all/specific objects and name reference to a standard disk location
+  * plus ability to recover these changes later - maybe make it standard behaviour to check the standard location
+
 
 ---
 
