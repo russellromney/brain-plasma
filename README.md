@@ -20,6 +20,8 @@ Sharing data between callbacks, on Apache Plasma. Built for Dash, useful anywher
 
 ### Basic Usage
 
+Basic idea: the brain has a list of names that it has "learned" that are attached to objects in Plasma. Bracket notation can be used as a shortcut of the `learn` and `recall` methods.
+
 ```
 $ pip install pyarrow
 $ pip install brain-plasma
@@ -34,14 +36,14 @@ this = 'a text object'
 that = [1,2,3,4]
 those = pd.DataFrame(dict(this=[1,2,3,4],that=[4,5,6,7]))
 
-brain.learn(this,'this')
-brain.learn(that,'that)
+brain['that'] = that # recommended
+brain.learn(this,'this') # underlying API
 brain.learn(those,'those')
 
-brain.recall('this')
+brain['this'] # recommended
 > 'a text object'
 
-brain.recall('that')
+brain.recall('that') # underlying API
 > [1,2,3,4]
 
 type(brain.recall('those'))
@@ -54,6 +56,20 @@ brain.recall('this')
 brain.names()
 > ['that','those']
 ```
+
+### TODO
+
+* multiple assignment
+  * this is actually very easy, as the underlying PlasmaClient API already supports this.
+* multiple namespaces
+  * i.e. `brain` and `brain_` can be in the same shared memory space without sharing a namespace
+  * `brain = Brain(namespace='app1')` changes the "names" prefix to some custom thing
+* launch the `plasma_store` from a `Brain` instance
+  * I built this using `subprocess` but it won't run in the background.
+* do special things optimizing the PlasmaClient interactions with NumPy and Pandas objects
+* change the size of the `plasma_store`
+* ability to persist items on disk and recall them with the same API
+* specify which objects cannot be used due to serialization constraints
 
 ### Basic API Reference for `brain_plasma.Brain`
 
@@ -68,6 +84,10 @@ The underlying PlasmaClient instance. Created at instantiation. Requires plasma_
 The path to the PlasmaClient connection folder. Default is `/tmp/plasma` but can be changed by using `brain = Brain(path='/my/new/path')`
 
 **Methods**
+
+`Brain.__setitem__` and `Brain.__getitem__` i.e. 'bracket notation' or `brain['name']`
+
+Shortcuts for `Brain.learn` and `Brain.recall`
 
 `Brain.learn(thing, name, description=False)`
 
@@ -108,3 +128,7 @@ Reconnect `Brain.client` to Plasma.
 `Brain.dead()`
 
 Disconnect `Brain.client` and kill the `plasma_store` process with `$ pkill plasma_store`
+
+---
+
+Made with :heart: by Russell Romney in Madison, WI. Thanks for the help from @tcbegley
