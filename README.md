@@ -105,6 +105,10 @@ Store object `thing` in Plasma, reference later with `name`
 
 Get the value of the object with name `name` from Plasma
 
+`Brain.resize(size)`
+
+Resize the underlying `plasma_store` process to have `size` bytes available. Must be at least as large as the current size of all objects in it.
+
 `Brain.info(name)`
 
 Get the metadata associated with the object with name `name`

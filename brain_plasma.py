@@ -1,7 +1,6 @@
 import pyarrow as pa
 from pyarrow import plasma
 import os
-import subprocess
 import random
 import string
 
@@ -16,7 +15,7 @@ class Brain:
         # TODO connect=True
         path="/tmp/plasma",
         size=50000000, # 50MB
-        start_process=False # start plasma_store ?
+        start_process=True # start plasma_store ?
     ):
         self.path = path
         self.size = size
@@ -129,8 +128,10 @@ class Brain:
             
     def dead(self,i_am_sure=True):
         '''pkill the plasma_store process'''
-        self.client.disconnect() 
-        os.system('pkill plasma_store')
+        self.client.disconnect()
+        # kill the oldest process
+          # when using self.resize(), this is the original plasma_store, then is the temp_brain plasma_store
+        os.system('pkill -o plasma_store')
     
     def sleep(self):
         '''disconnect from the client'''
@@ -139,6 +140,28 @@ class Brain:
     def wake_up(self):
         '''reconnect to the client'''
         self.client = plasma.connect(self.path)    
+
+    def resize(self,size):
+        # TODO - add a way to deal with desriptions
+        # create temp brain with old size by temp path
+        self.temp_brain = Brain(size=self.size,path='/tmp/plasma-temp',start_process=True)
+        # save the value of each name in the temp brain
+        for name in self.names():
+            self.temp_brain[name] = self.recall(name)
+        # delete the old brain's plasma_store
+        self.dead(i_am_sure=True)
+        # create new brain with same path as old brain, but new size
+          # this also resets self.size to input size (see self.start())
+        self.start(size=size)
+        self.client = plasma.connect(self.path)
+        # for each name in the temp brain, save that name & value to the resized brain
+        for name in self.temp_brain.names():
+            self.learn(self.temp_brain.recall(name),name)
+        self.temp_brain.dead(i_am_sure=True)
+        del self.temp_brain
+        
+
+
 
     # def brain_size(self):
     #     '''return the total memory allocated to the store'''
