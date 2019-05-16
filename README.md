@@ -15,7 +15,7 @@ Sharing data between callbacks, on Apache Plasma. Built for Dash, useful anywher
 
 **Current Drawbacks**
 
-4. (3.) above slows the `Brain` down, minutely...but it makes it safe for programs that don't share memory. This only becomes a problem if there are thousands of variables that need to be parsed each time, but even then it's still a small fraction of a second.
+1. (3.) above slows the `Brain` down, minutely...but it makes it safe for programs that don't share memory. This only becomes a problem if there are thousands of variables that need to be parsed each time, but even then it's still a small fraction of a second.
 6. Limited to Arrow-serializable objects.
 
 ### Basic Usage
