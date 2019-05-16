@@ -14,7 +14,7 @@ setup(
     license = 'MIT',
     packages = find_packages(),
     install_requires = [
-        'pyarrow',
+        'pyarrow>=0.13.0',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

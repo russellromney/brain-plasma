@@ -167,9 +167,9 @@ Apache Plasma docs: https://arrow.apache.org/docs/python/plasma.html#
 * multiple namespaces
   * i.e. `brain` and `brain_` can be in the same shared memory space without sharing a namespace
   * `brain = Brain(namespace='app1')` changes the "names" prefix to some custom thing
-- [x] launch the `plasma_store` from a `Brain` instance
+* launch the `plasma_store` from a `Brain` instance DONE
 * do special things optimizing the PlasmaClient interactions with NumPy and Pandas objects
-- [x] change the size of the `plasma_store` but maintain current namespace(s)
+* change the size of the `plasma_store` but maintain current namespace(s) DONE
 * ability to persist items on disk and recall them with the same API
 * specify in docs or with error messages which objects cannot be used due to serialization constraints
 * ability to dump all/specific objects and name reference to a standard disk location
