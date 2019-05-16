@@ -10,13 +10,20 @@ Sharing data between callbacks, on Apache Plasma. Built for Dash, useful anywher
 1. Create and reference named shared-memory Python objects
 2. Change the value of those shared-memory Python objects
 3. Thread-safe: it doesn't matter if the processes or threads sharing the `Brain` object share memory or not; the namespace is only stored in Plasma and checked each time any object is referenced.
-4. Store large objects, especially Pandas and NumPy objects, in the backend
-5. Access those objects very quickly - faster than Parquet. Pulling ~10,000,000 row Pandas object takes about .45 seconds, storing it takes about 1 second. Instantaneous for most objects of reasonable size, including Pandas up to ~200,000 rows.
+4. Store large objects, especially Pandas and NumPy objects, in the backend of something
+5. Access those objects very quickly - faster than Parquet. Pulling ~10,000,000 row Pandas object takes about .45 seconds, storing it takes about 1 second. Instantaneous for most objects of any size.
+1. Easily start and stop a `plasma_store` instance
+4. Easily resize the `plasma_store` memory
+
+### Potential use cases
+* Keep test values intact while restarting some process over and over again
+* Share data between callbacks in Ploty Dash
+* 
 
 **Current Drawbacks**
 
-1. (3.) above slows the `Brain` down, minutely...but it makes it safe for programs that don't share memory. This only becomes a problem if there are thousands of variables that need to be parsed each time, but even then it's still a small fraction of a second.
-6. Limited to Arrow-serializable objects.
+1. Limited to Arrow-serializable objects. This includes Pandas, NumPy, TensorFlow, all built-in Python objects, and many more. However, some things will not be supported. Check before using.
+2. Prints output. 
 
 ### Basic Usage
 
@@ -61,19 +68,19 @@ brain.names()
 
 **Initialization**
 
-`brain = Brain(path="/tmp/plasma", start_process=False, size=50000000)`
+`brain = Brain(path="/tmp/plasma", start_process=True, size=50000000) # defaults` 
 
 Parameters:
 
 * `path` - which path to use to start and/or connect to the plasma store
-* `start_process` - whether or not to start a new process at that path. Kills existing process if it exists.
+* `start_process` - whether or not to start a new process at that path. Kills existing process if it exists at the same `path`
 * `size` - number of bytes that the plasma_store can use
 
 **Attributes**
 
 `Brain.client`
 
-The underlying PlasmaClient instance. Created at instantiation. Requires plasma_store to be running locally.
+The underlying PlasmaClient object. Created at instantiation. Requires plasma_store to be running locally.
 
 `Brain.path`
 
@@ -161,15 +168,14 @@ Apache Plasma docs: https://arrow.apache.org/docs/python/plasma.html#
   * i.e. `brain` and `brain_` can be in the same shared memory space without sharing a namespace
   * `brain = Brain(namespace='app1')` changes the "names" prefix to some custom thing
 - [x] launch the `plasma_store` from a `Brain` instance
-  - ~~I built this using `subprocess` but it won't run in the background.~~~ rebuilt using `os.system` and it works fine
 * do special things optimizing the PlasmaClient interactions with NumPy and Pandas objects
-* change the size of the `plasma_store` but maintain current namespace(s)
+- [x] change the size of the `plasma_store` but maintain current namespace(s)
 * ability to persist items on disk and recall them with the same API
-* specify in docs which objects cannot be used due to serialization constraints
+* specify in docs or with error messages which objects cannot be used due to serialization constraints
 * ability to dump all/specific objects and name reference to a standard disk location
   * plus ability to recover these changes later - maybe make it standard behaviour to check the standard location
 
 
 ---
 
-Made with :heart: by Russell Romney in Madison, WI. Thanks for the help from @tcbegley
+Made with :heart: by Russell Romney in Madison, WI. Thanks for the contributions from @tcbegley (so far)
