@@ -18,19 +18,20 @@ class Brain:
         start_process=True # start plasma_store ?
     ):
         self.path = path
-        self.size = size
+        self.bytes = size
         self.mb = '{} MB'.format(round(size/1000000))
         # start plasma_store if necessary
         if start_process:
             # start the plasma_client - if there is one running at that path, shut it down and restart it with the current size
             try:
-                os.system('plasma_store -m {} -s {} & disown'.format(self.size,self.path))
+                os.system('plasma_store -m {} -s {} & disown'.format(self.bytes,self.path))
             except:
                 os.system('pkill plasma_store')
-                os.system('plasma_store -m {} -s {} & disown'.format(self.size,self.path))
+                os.system('plasma_store -m {} -s {} & disown'.format(self.bytes,self.path))
             # if not proc.returncode:
             #     raise BaseException('BrainError: could not start plasma_store; here is the error message:\n{}',format(proc.stderr))
         self.client = plasma.connect(self.path)
+        self.bytes = self.size()
 
     ### core functions
     def learn(self,thing,name,description=False):
@@ -117,13 +118,14 @@ class Brain:
             # test to see if the client is connected to a plasma_store
             temp = brain.client.put(5)
             brain.client.delete(temp)
+            self.bytes = self.size()
         except:
-            # if not, connect it
+            # if not, start the store and connect it
             if size!=None:
-                self.size = size
+                self.bytes = size
             if path!=None:
                 self.path = path
-            os.system('plasma_store -m {} -s {} & disown'.format(self.size,self.path))
+            os.system('plasma_store -m {} -s {} & disown'.format(self.bytes,self.path))
             self.wake_up()
             
     def dead(self,i_am_sure=True):
@@ -141,19 +143,24 @@ class Brain:
         '''reconnect to the client'''
         self.client = plasma.connect(self.path)    
 
+    def size(self):
+        '''show the available bytes of the underlying plasma_store; wrapper for PlasmaClient.store_capacity()'''
+        self.bytes = self.client.store_capacity()
+        return self.bytes
+
     def resize(self,size):
         # TODO - add a way to deal with desriptions
         # create temp brain with old size by temp path
-        self.temp_brain = Brain(size=self.size,path='/tmp/plasma-temp',start_process=True)
+        self.temp_brain = Brain(size=self.bytes,path='/tmp/plasma-temp',start_process=True)
         # save the value of each name in the temp brain
         for name in self.names():
             self.temp_brain[name] = self.recall(name)
         # delete the old brain's plasma_store
         self.dead(i_am_sure=True)
         # create new brain with same path as old brain, but new size
-          # this also resets self.size to input size (see self.start())
+          # this also resets self.bytes to input size (see self.start())
         self.start(size=size)
-        self.client = plasma.connect(self.path)
+        self.wake_up()
         # for each name in the temp brain, save that name & value to the resized brain
         for name in self.temp_brain.names():
             self.learn(self.temp_brain.recall(name),name)

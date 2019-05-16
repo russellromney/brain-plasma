@@ -86,9 +86,9 @@ The underlying PlasmaClient object. Created at instantiation. Requires plasma_st
 
 The path to the PlasmaClient connection folder. Default is `/tmp/plasma` but can be changed by using `brain = Brain(path='/my/new/path')`
 
-`Brain.size`
+`Brain.bytes`
 
-int - number of bytes available in the plasma_store, e.g. `50000000`
+int - number of bytes available in `plasma_store`
 
 `Brain.mb`
 
@@ -111,6 +111,11 @@ Store object `thing` in Plasma, reference later with `name`
 `Brain.recall(name)`
 
 Get the value of the object with name `name` from Plasma
+
+`Brain.size()`
+
+Calls `brain.client.store_capacity()`, returns int - number of bytes available in the plasma_store, e.g. `50000000`
+
 
 `Brain.resize(size)`
 
