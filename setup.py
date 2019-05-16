@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'brain-plasma',
-    version = '0.1.1',
+    version = '0.1.2',
     description = 'Share python between callbacks in Dash, using Apache Plasma',
     long_description = 'A basic API on top of the Apache Plasma in-memory object store, allowing you to share data locally between threads, processes, or programs that do not share memory',
     keywords = ' dash plasma callbacks plotly apache arrow pandas numpy redis',

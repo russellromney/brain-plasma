@@ -116,10 +116,17 @@ Get the value of the object with name `name` from Plasma
 
 Calls `brain.client.store_capacity()`, returns int - number of bytes available in the plasma_store, e.g. `50000000`
 
-
 `Brain.resize(size)`
 
 Resize the underlying `plasma_store` process to have `size` bytes available. Must be at least as large as the current size of all objects in it.
+
+`Brain.used()`
+
+Calculates how many bytes the plasma_store is using. NOTE: THIS CAN BE A BIT SLOW IF YOU HAVE MANY LARGE OBJECTS IN THE STORE
+
+`Brain.free()`
+
+Calculates how many bytes of the plasma_store is not used
 
 `Brain.info(name)`
 
@@ -128,6 +135,10 @@ Get the metadata associated with the object with name `name`
 `Brain.forget(name)`
 
 Delete the object in Plasma with name `name` as well as the index object
+
+`Brain.object_map()`
+
+Get a dictionary of the names and their associated object IDs. Allows for more granular work with PlasmaClient. Simply calls the helper function `brain_names_ids`.
 
 `Brain.names()`
 
@@ -139,7 +150,7 @@ Get a list of all the plasma.ObjectIDs that brain knows the name of
 
 `Brain.knowledge()`
 
-Get a list of all the "brain object" index objects used as a reference: name (variable name), name_id (bytes of the ObjectID for the index object) d(bytes of ObjectID for the value), description (False if not assigned)
+Get a list of all the "brain object" index objects used as a reference: name (variable name), name_id (bytes of the ObjectID for the index object) d(bytes of ObjectID for the value), description (False if not assigned). Basically calls `brain.info()` for each known name (through helper function `brain_names_objects`)
 
 `Brain.sleep()`
 
