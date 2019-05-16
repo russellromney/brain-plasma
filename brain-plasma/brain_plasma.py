@@ -120,7 +120,7 @@ class Brain:
             brain.client.delete(temp)
             self.bytes = self.size()
         except:
-            # if not, connect it
+            # if not, start the store and connect it
             if size!=None:
                 self.bytes = size
             if path!=None:
@@ -144,7 +144,7 @@ class Brain:
         self.client = plasma.connect(self.path)    
 
     def size(self):
-        '''show the available bytes of the underlying plasma_store; wrapper for PlasmaClient.store_capacity()l'''
+        '''show the available bytes of the underlying plasma_store; wrapper for PlasmaClient.store_capacity()'''
         self.bytes = self.client.store_capacity()
         return self.bytes
 
@@ -160,7 +160,7 @@ class Brain:
         # create new brain with same path as old brain, but new size
           # this also resets self.bytes to input size (see self.start())
         self.start(size=size)
-        self.client = plasma.connect(self.path)
+        self.wake_up()
         # for each name in the temp brain, save that name & value to the resized brain
         for name in self.temp_brain.names():
             self.learn(self.temp_brain.recall(name),name)
