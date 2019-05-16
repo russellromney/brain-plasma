@@ -8,7 +8,7 @@ setup(
     long_description = 'A basic API on top of the Apache Plasma in-memory object store, allowing you to share data locally between threads, processes, or programs that do not share memory',
     keywords = ' dash plasma callbacks plotly apache arrow pandas numpy redis',
     url = 'https://github.com/russellromney/brain-plasma',
-    download_url = 'https://github.com/russellromney/brain-plasma/archive/v0.1.1.tar.gz',
+    download_url = 'https://github.com/russellromney/brain-plasma/archive/v0.1.2.tar.gz',
     author = 'Russell Romney',
     author_email = 'russellromney@gmail.com',
     license = 'MIT',
