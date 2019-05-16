@@ -3,6 +3,7 @@ from pyarrow import plasma
 import os
 import random
 import string
+import time
 
 # running shell commands
 # https://stackoverflow.com/questions/89228/calling-an-external-command-in-python
@@ -19,19 +20,16 @@ class Brain:
     ):
         self.path = path
         self.bytes = size
-        self.mb = '{} MB'.format(round(size/1000000))
+        self.mb = '{} MB'.format(round(self.bytes/1000000))
         # start plasma_store if necessary
         if start_process:
             # start the plasma_client - if there is one running at that path, shut it down and restart it with the current size
-            try:
-                os.system('plasma_store -m {} -s {} & disown'.format(self.bytes,self.path))
-            except:
-                os.system('pkill plasma_store')
-                os.system('plasma_store -m {} -s {} & disown'.format(self.bytes,self.path))
+            self.start(size=self.bytes,path=self.path)
             # if not proc.returncode:
             #     raise BaseException('BrainError: could not start plasma_store; here is the error message:\n{}',format(proc.stderr))
         self.client = plasma.connect(self.path)
-        self.bytes = self.size()
+        if not start_process:
+            self.bytes = self.size()
 
     ### core functions
     def learn(self,thing,name,description=False):
@@ -116,24 +114,36 @@ class Brain:
         '''start plasma_store again if it is dead'''
         try:
             # test to see if the client is connected to a plasma_store
-            temp = brain.client.put(5)
-            brain.client.delete(temp)
+            temp = self.client.put(5)
+            self.client.delete(temp)
             self.bytes = self.size()
+            self.mb = '{} MB'.format(round(self.bytes/1000000))
         except:
             # if not, start the store and connect it
             if size!=None:
                 self.bytes = size
             if path!=None:
                 self.path = path
-            os.system('plasma_store -m {} -s {} & disown'.format(self.bytes,self.path))
-            self.wake_up()
+            # check if there is an existing plasma_store at that place; if so, connect to it and resize it to the new sie
+            try:
+                self.client = plasma.connect(self.path)
+                for name in self.names():
+                    self.forget(name)
+                if size!=None:
+                    self.resize(size)                
+            except:
+                os.system('plasma_store -m {} -s {} & disown'.format(self.bytes,self.path))
+                self.wake_up()
             
     def dead(self,i_am_sure=True):
-        '''pkill the plasma_store process'''
-        self.client.disconnect()
-        # kill the oldest process
-          # when using self.resize(), this is the original plasma_store, then is the temp_brain plasma_store
-        os.system('pkill -o plasma_store')
+        '''pkill the plasma_store processes'''
+        if i_am_sure:
+            self.client.disconnect()
+            # kill the oldest process
+            # when using self.resize(), this is the original plasma_store, then is the temp_brain plasma_store
+            os.system('pkill -o plasma_store')
+        else:
+            return 'You were not sure about brain.dead(). I did not kill the brain.'
     
     def sleep(self):
         '''disconnect from the client'''
@@ -141,11 +151,20 @@ class Brain:
 
     def wake_up(self):
         '''reconnect to the client'''
-        self.client = plasma.connect(self.path)    
+        self.client = plasma.connect(self.path)
+        time.sleep(.1)
+        self.bytes = self.size()
+        self.mb = '{} MB'.format(round(self.bytes/1000000))
 
     def size(self):
         '''show the available bytes of the underlying plasma_store; wrapper for PlasmaClient.store_capacity()'''
+        try:
+            temp = self.client.put(5)
+            self.client.delete([temp])
+        except:
+            raise BaseException
         self.bytes = self.client.store_capacity()
+        self.mb = '{} MB'.format(round(self.bytes/1000000))
         return self.bytes
 
     def resize(self,size):
@@ -156,17 +175,31 @@ class Brain:
         for name in self.names():
             self.temp_brain[name] = self.recall(name)
         # delete the old brain's plasma_store
-        self.dead(i_am_sure=True)
+        self.dead()
         # create new brain with same path as old brain, but new size
           # this also resets self.bytes to input size (see self.start())
         self.start(size=size)
-        self.wake_up()
         # for each name in the temp brain, save that name & value to the resized brain
         for name in self.temp_brain.names():
             self.learn(self.temp_brain.recall(name),name)
         self.temp_brain.dead(i_am_sure=True)
         del self.temp_brain
-        
+
+    def object_map(self):
+        '''return a dictionary of names and their associated ObjectIDs'''
+        return brain_names_ids(self.client)
+
+    def used(self):
+        '''get the total used bytes in the underlying plasma_store'''
+        total = 0
+        l = self.client.list()
+        for x in l.keys():
+            total+=l[x]['data_size']+l[x]['metadata_size']
+        return total
+    
+    def free(self):
+        '''get the total unused bytes in the underlying plasma_store'''
+        return self.size() - self.used()
 
 
 
