@@ -1,4 +1,4 @@
-from brain_plasma import Brain
+from brain_plasma.brain_plasma import Brain
 import json
 import pandas as pd
 import numpy as np

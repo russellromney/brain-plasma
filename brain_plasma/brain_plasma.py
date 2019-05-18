@@ -126,7 +126,7 @@ class Brain:
                 self.path = path
             # check if there is an existing plasma_store at that place; if so, connect to it and resize it to the new sie
             try:
-                self.client = plasma.connect(self.path)
+                self.client = plasma.connect(self.path,num_retires=2)
                 for name in self.names():
                     self.forget(name)
                 if size!=None:
@@ -168,6 +168,10 @@ class Brain:
         return self.bytes
 
     def resize(self,size):
+        '''change the size of the underlying plasma_store to "size"'''
+        # check to see if the size of the new brain will be too small
+        if self.used() >= size:
+            raise BaseException('BrainError: must resize to bytes larger than currently used bytes')
         # TODO - add a way to deal with desriptions
         # create temp brain with old size by temp path
         self.temp_brain = Brain(size=self.bytes,path='/tmp/plasma-temp',start_process=True)
