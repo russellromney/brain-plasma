@@ -207,17 +207,6 @@ class Brain:
 
 
 
-    # def brain_size(self):
-    #     '''return the total memory allocated to the store'''
-    #     return self.client.store_capacity()
-
-
-
-
-
-
-
-
 
 ### utility functions - not callable outside the function
 def brain_ids(client):
