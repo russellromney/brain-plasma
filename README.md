@@ -1,3 +1,6 @@
+# NOTE - UNSTABLE
+`brain-plasma` is not stable right now! I need to make a few changes to how individual stores are managed, probably by making a separate index store like in one of the open issues. BE VERY CAREFUL ABOUT USING THIS, AND DO NOT USE IN PRODUCTION.
+
 # brain-plasma
 Sharing data between callbacks, on Apache Plasma. Built for Dash, useful anywhere. Only supported on Mac/Linux for now.
 
