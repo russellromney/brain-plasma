@@ -170,8 +170,9 @@ class Brain:
     def resize(self,size):
         '''change the size of the underlying plasma_store to "size"'''
         # check to see if the size of the new brain will be too small
-        if self.used() >= size:
+        if self.used() >= size+5000:
             raise BaseException('BrainError: must resize to bytes larger than currently used bytes')
+        
         # TODO - add a way to deal with desriptions
         # create temp brain with old size by temp path
         self.temp_brain = Brain(size=self.bytes,path='/tmp/plasma-temp',start_process=True)
