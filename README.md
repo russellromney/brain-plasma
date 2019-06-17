@@ -1,9 +1,44 @@
+# NOTE - UNSTABLE
+`brain-plasma` is not stable right now! I need to make a few changes to how individual stores are managed, probably by making a separate index store like in one of the open issues. BE VERY CAREFUL ABOUT USING THIS, AND DO NOT USE IN PRODUCTION.
+
 # brain-plasma
 Sharing data between callbacks, on Apache Plasma. Built for Dash, useful anywhere. Only supported on Mac/Linux for now.
 
 ---
 
-`brain-plasma` is a high-level wrapper for the Apache Plasma PlasmaClient API with an added object naming, reference, and changing system.
+`brain-plasma` is a high-level wrapper for the Apache Plasma PlasmaClient API with an added naming system.
+
+### Basic Usage
+
+Basic idea: the brain has a list of names that it has "learned" that are attached to objects in Plasma. Bracket notation can be used as a shortcut of the `learn` and `recall` methods.
+
+```
+$ pip install pyarrow
+$ pip install brain-plasma
+```
+
+```
+from brain_plasma import Brain
+brain = Brain()
+
+this = 'a text object'
+those = pd.DataFrame(dict(this=[1,2,3,4],that=[4,5,6,7]))
+
+brain['this'] = this # recommended
+brain.learn(those,'those') # underlying API
+
+brain['this'] # recommended
+> 'a text object'
+type(brain.recall('those')) # underlying API
+> pandas.core.frame.DataFrame
+
+brain.forget('this') # remove the object from the brain's memory
+brain['this']
+> # error, that name/object no longer exists
+
+brain.names()
+> ['those']
+```
 
 ### Key Features
 
@@ -17,52 +52,14 @@ Sharing data between callbacks, on Apache Plasma. Built for Dash, useful anywher
 
 ### Potential use cases
 * Keep test values intact while restarting some process over and over again
-* Share data between callbacks in Ploty Dash
-* 
+* Share data between callbacks in Ploty Dash (or any other Python backend)
+* Share data between Jupyter Notebooks
 
 **Current Drawbacks**
 
 1. Limited to Arrow-serializable objects. This includes Pandas, NumPy, TensorFlow, all built-in Python objects, and many more. However, some things will not be supported. Check before using.
-2. Prints output. 
+2. Prints output.
 
-### Basic Usage
-
-Basic idea: the brain has a list of names that it has "learned" that are attached to objects in Plasma. Bracket notation can be used as a shortcut of the `learn` and `recall` methods.
-
-```
-$ pip install pyarrow
-$ pip install brain-plasma
-$ plasma_store -m 50000000 -s /tmp/plasma & disown
-```
-
-```
-from brain_plasma import Brain
-brain = Brain(start_process=True)
-
-this = 'a text object'
-that = [1,2,3,4]
-those = pd.DataFrame(dict(this=[1,2,3,4],that=[4,5,6,7]))
-
-brain['that'] = that # recommended
-brain.learn(this,'this') # underlying API
-brain.learn(those,'those')
-
-brain['this'] # recommended
-> 'a text object'
-
-brain.recall('that') # underlying API
-> [1,2,3,4]
-
-type(brain.recall('those'))
-> pandas.core.frame.DataFrame
-
-brain.forget('this')
-brain.recall('this')
-> # error, that name/object no longer exists
-
-brain.names()
-> ['that','those']
-```
 
 ### API Reference for `brain_plasma.Brain`
 
@@ -122,7 +119,7 @@ Resize the underlying `plasma_store` process to have `size` bytes available. Mus
 
 `Brain.used()`
 
-Calculates how many bytes the plasma_store is using. NOTE: THIS CAN BE A BIT SLOW IF YOU HAVE MANY LARGE OBJECTS IN THE STORE
+Calculates how many bytes the plasma_store is using.
 
 `Brain.free()`
 
