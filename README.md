@@ -6,18 +6,19 @@ Sharing data between callbacks, on Apache Plasma. Built for Dash, useful anywher
 
 `brain-plasma` is a high-level wrapper for the Apache Plasma PlasmaClient API with an added naming and namespacing system.
 
-**BIG RELEASE: `v0.2`**
+**BIG RELEASE WITH BREAKING CHANGES: `v0.2`**
 
-- changed parameter order of `learn()` and to `('name',thing)` which is more intuitive (but you should always use bracket notation)
+- changed parameter order of `learn()` to `('name',thing)` which is more intuitive (but you should always use bracket notation)
 - removed ability to start, kill, or resize the underlying brain instance (stability)
-- added unique intra-instance namespaces
+- added unique intra-plasma-instance namespaces
+- `len(brain)`, `del brain['this']` and `'this' in brain` are now avilable (implemented `__len__`, `__delitem__`, and `__contains__`)
 
 NOTE: stability problems should be resolved in `v0.2`. 
 
 ---
 ## Basic Use
 
-Basic idea: the brain has a list of names that it has "learned" that are attached to objects in Plasma. Bracket notation can be used as a shortcut of the `learn` and `recall` methods.
+Basic idea: the brain has a list of names that it has "learned" that are attached to objects in Plasma. Learn, recall, and delete stored objects, call it like a dictionary with bracket notation e.g. `brain['x']` and `del`.
 
 ```
 pip install pyarrow
@@ -40,7 +41,7 @@ brain['this']
 brain.names()
 >>> ['this']
 
-brain.forget('this') # remove the object from the brain's memory
+del brain['this'] # remove the object from the brain's memory
 brain['this']
 >>> # error, that name/object no longer exists
 
@@ -71,13 +72,14 @@ brain.names(namespaces='all')
 3. Thread-safe: it doesn't matter if the processes or threads sharing the `Brain` object share memory or not; the namespace is only stored in Plasma and checked each time any object is referenced.
 4. Store large objects, especially Pandas and NumPy objects, in the backend of something
 5. Access those objects very quickly - faster even than Parquet. Instantaneous for most objects of any size.
-6. Create and switch between unique namespaces while requiring only one backend instance of `plasma_store`
+6. Quickly create, switch between, and remove unique namespaces while requiring only one backend instance of `plasma_store`
 
 ## Potential use cases
-* access large data objects quickly in a data-intensive application
+* Access large data objects quickly in a data-intensive application
 * Keep test values intact while restarting some process over and over again
 * Share data between callbacks in Ploty Dash (or any other Python backend)
 * Share data between Jupyter Notebooks
+* Store and persist user state values in unique namespaces server-side
 
 **Current Drawbacks**
 
@@ -138,9 +140,17 @@ str - the name of the current namespace
 
 **Interacting with stored objects**
 
-`Brain.__setitem__` and `Brain.__getitem__` i.e. 'bracket notation' or `brain['name']`
+Store an item's value and recall the value with bracket notation:
 
-Shortcuts for `Brain.learn` and `Brain.recall`
+```
+brain['this'] = 5
+x = brain['this']
+```
+i.e. `Brain.__setitem__` and `Brain.__getitem__`
+
+Delete a name and its stored value like `del brain['this']`
+
+**(Underlying API) - Interacting with stored objects**
 
 `Brain.learn(name, thing, description=False)`
 
@@ -153,6 +163,7 @@ Get the value of the object with name `name` from Plasma
 `Brain.forget(name)`
 
 Delete the object in Plasma with name `name` as well as the index object
+
 
 **Interacting with namespaces (NEW)**
 
@@ -177,7 +188,7 @@ Removes namespace `namespace` and removes all of the objects in `namespace`. If 
 
 `Brain.info(name)`
 
-Get the metadata object associated with the object with name `name`.
+Get the metadata dict object associated with the object with name `name`.
 
 Structure:
 {
@@ -198,9 +209,11 @@ Get a list of all objects that `Brain` knows the name of (all names in the speci
 
 If `namespace='all'`, then it gives the list of all the names in all the available namespaces.
 
+Use `'name' in brain` as a shortcut for checking if a name is known.
+
 `Brain.ids()`
 
-Get a list of all the plasma.ObjectIDs that brain knows the name of
+Get a list of all the plasma.ObjectID instances that brain knows the name of.
 
 `Brain.knowledge()`
 
@@ -254,6 +267,7 @@ Apache Plasma docs: https://arrow.apache.org/docs/python/plasma.html#
 * ability to specify namespace for all class methods.
   * this would allow you to do everything declaratively without needing another line of code
   * right now everything uses self.namespace
+* copy behavior of dictionaries i.e. allow indexed `__setitem__`. `__getitem__` is implicitly supported.
 * do special things optimizing the PlasmaClient interactions with NumPy and Pandas objects
 * ability to persist items on disk and recall them with the same API
 * specify in docs or with error messages which objects cannot be used due to serialization constraints
