@@ -8,6 +8,7 @@ setup(
     long_description = 'Adds variable naming and unique intra-instance namespaces to the Apache Plasma in-memory object store.',
     keywords = ' dash plasma callbacks plotly apache arrow pandas numpy redis namespace python',
     url = 'https://github.com/russellromney/brain-plasma',
+    download_url = 'https://github.com/russellromney/brain-plasma/archive/v0.2.tar.gz',
     author = 'Russell Romney',
     author_email = 'russellromney@gmail.com',
     license = 'MIT',
