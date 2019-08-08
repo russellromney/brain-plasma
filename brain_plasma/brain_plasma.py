@@ -73,6 +73,16 @@ class Brain:
         return self.recall(name)
 
 
+    def __delitem__(self,name):
+        return self.forget(name)
+
+    def __contains__(self,name):
+        return name in self.names()
+
+    def __len__(self):
+        return len(self.names())
+
+
     def info(self,name):
         '''return metadata object based on its Brain name'''
         names_ = self._brain_names_objects(self.client)
