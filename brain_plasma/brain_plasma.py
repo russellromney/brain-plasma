@@ -10,10 +10,8 @@ import time
 class Brain:
     def __init__(
         self,
-        # TODO connect=True
         namespace='default',
         path="/tmp/plasma",
-        # size=50000000, # 50MB
     ):
         self.path = path
         self.namespace = namespace
