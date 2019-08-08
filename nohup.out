@@ -1,0 +1,37 @@
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0808 14:09:29.553231 469407168 store.cc:1100] Allowing the Plasma store to use up to 0.05GB of memory.
+I0808 14:09:29.553975 469407168 store.cc:1127] Starting object store with directory /tmp and huge page support disabled
+I0808 14:10:12.828096 469407168 store.cc:1050] SIGTERM Signal received, closing Plasma Server...
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0808 14:10:23.050351 471631296 store.cc:1100] Allowing the Plasma store to use up to 0.05GB of memory.
+I0808 14:10:23.051059 471631296 store.cc:1127] Starting object store with directory /tmp and huge page support disabled
+I0808 14:11:14.375839 471631296 store.cc:1050] SIGTERM Signal received, closing Plasma Server...
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0808 14:12:14.622287 13579712 store.cc:1100] Allowing the Plasma store to use up to 0.05GB of memory.
+I0808 14:12:14.622936 13579712 store.cc:1127] Starting object store with directory /tmp and huge page support disabled
+I0808 14:12:14.919620 13579712 store.cc:700] Disconnecting client on fd 7
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0808 14:12:45.427724 205886912 store.cc:1100] Allowing the Plasma store to use up to 0.05GB of memory.
+I0808 14:12:45.428268 205886912 store.cc:1127] Starting object store with directory /tmp and huge page support disabled
+I0808 14:12:45.506881 13579712 store.cc:700] Disconnecting client on fd 7
+I0808 14:13:04.705905 13579712 store.cc:1050] SIGTERM Signal received, closing Plasma Server...
+I0808 14:13:04.705914 205886912 store.cc:1050] SIGTERM Signal received, closing Plasma Server...
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0808 14:13:35.306613 165692864 store.cc:1100] Allowing the Plasma store to use up to 0.05GB of memory.
+I0808 14:13:35.307253 165692864 store.cc:1127] Starting object store with directory /tmp and huge page support disabled
+I0808 14:14:10.705427 165692864 store.cc:700] Disconnecting client on fd 7
+I0808 14:17:22.967564 165692864 store.cc:1050] SIGTERM Signal received, closing Plasma Server...
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0808 14:17:49.156486 204563904 store.cc:1100] Allowing the Plasma store to use up to 0.05GB of memory.
+I0808 14:17:49.157151 204563904 store.cc:1127] Starting object store with directory /tmp and huge page support disabled
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0808 14:18:09.984081 344016320 store.cc:1100] Allowing the Plasma store to use up to 0.05GB of memory.
+I0808 14:18:09.984726 344016320 store.cc:1127] Starting object store with directory /tmp and huge page support disabled
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0808 14:18:45.012533 115946944 store.cc:1100] Allowing the Plasma store to use up to 0.05GB of memory.
+I0808 14:18:45.013085 115946944 store.cc:1127] Starting object store with directory /tmp and huge page support disabled
+I0808 14:18:45.103845 344016320 store.cc:700] Disconnecting client on fd 7
+I0808 14:19:21.025921 115946944 store.cc:700] Disconnecting client on fd 7
+I0808 14:19:34.815279 344016320 store.cc:1050] SIGTERM Signal received, closing Plasma Server...
+I0808 14:19:34.815279 115946944 store.cc:1050] SIGTERM Signal received, closing Plasma Server...
+I0808 14:19:34.815275 204563904 store.cc:1050] SIGTERM Signal received, closing Plasma Server...

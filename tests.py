@@ -1,23 +1,15 @@
-from brain_plasma.brain_plasma import Brain
+from brain_plasma import Brain
 import json
 import pandas as pd
 import numpy as np
 import os
 
-# create a Brain with no store running
-brain = Brain(start_process=True)
-
-# shut down the Brain
-brain.dead(i_am_sure=True)
-
 # create a Brain with a store running
 print('starting plasma_state')
-os.system('plasma_store -m {} -s {} & disown'.format(50000000,'/tmp/plasma'))
-brain = Brain()
-brain.dead(i_am_sure=True)
 
-# create a store of nonstandard size
-brain = Brain(start_process=True, size=75000000)
+# start the plasma_store at 
+path = '/tmp/brain_plasma_test'
+brain = Brain(path=path)
 
 # create python objects
 a = dict(this=[1,2,3,4],that=[2,3,4,5])
@@ -33,7 +25,7 @@ def i(name):
 j = 5
 k = str
 for thing,name in zip([a,b,c,d,e,f,g,h,i,j,k],[i for i in 'abcdefghijk']):
-    brain.learn(thing,name)
+    brain.learn(name,thing)
 
 # read python object
 assert a==brain.recall('a')
@@ -50,19 +42,19 @@ assert k==brain.recall('k')
 
 # create small pandas object with standard types
 l = pd.DataFrame(a)
-brain.learn(l,'l')
+brain['l'] = l
 
 # create large pandas object with standard types
 m = pd.DataFrame(dict(this=[i for i in range(100000)],that=[i for i in range(100000)][::-1]))
-brain.learn(m,'m')
+brain['m'] = m
 
 # create pandas object with nonstandard types
 n = pd.DataFrame(dict(this=[a,b,c,d,e,f,g,h,i,j,k]))
-brain.learn(n,'n')
+brain['n'] = n
 
 # create pandas series
 o = pd.Series([1,2,3,4,5,6,])
-brain.learn(o,'o')
+brain['o'] = o
 
 # read all pandas objects
 assert list(l.columns)==list(brain.recall('l').columns)
@@ -74,8 +66,8 @@ assert o.values[0]==brain.recall('o').values[0]
 # create numpy objects
 p = np.array([1,2,3,4,5])
 q = np.mean
-brain.learn(p,'p')
-brain.learn(q,'q')
+brain['p'] = p
+brain['q'] = q
 
 # read list of names
 assert set(brain.names())==set([thing for thing in 'abcdefghijklmnopq'])
@@ -93,10 +85,10 @@ a = 'this'
 b = 'that'
 c = 57
 d = m
-brain.learn(l,'a')
-brain.learn(m,'b')
-brain.learn(n,'c')
-brain.learn(o,'d')
+brain.learn('a',l)
+brain.learn('b',m)
+brain.learn('c',n)
+brain.learn('d',o)
 assert list(l.columns)==list(brain.recall('a').columns)
 assert set([x for x in l.that])==set([x for x in brain.recall('a').that])
 assert list(m.this[:5].values)==list(brain.recall('b').this[:5].values)
@@ -109,11 +101,14 @@ assert len(brain.names())==17
 # delete python objects, and confirm that they no longer exist in plasma store
 for name in 'abcdefghijklmnopq':
     brain.forget(name)
+    x = 0
     try:
         brain.recall(name)
-        raise BaseException        
+        x = 5
     except:
         pass
+    if x==5:
+        raise BaseException
 
 # sleep the brain
 brain.sleep()
@@ -121,17 +116,92 @@ brain.sleep()
 # reconnect the brain
 brain.wake_up()
 
-# kill the brain
-brain.dead(i_am_sure=True)
 
-# make sure that the underlying process doesn't work
+
+
+## namespaces
+print('testing namespaces')
+# current namespace is 'default'
+assert brain.show_namespaces()=={'default'}
+
+# add value to default namespace
+brain['a'] = 5
+
+# value has namespace value in its brain_object
+assert brain.info('a')['namespace']=='default'
+
+# add a new namespace - name too short
+x = True
 try:
-    brain = Brain()
+    brain.set_namespace('new')
+    x = False
+except: pass
+assert x
+
+# add new namespace - name too long
+try:
+    brain.set_namespace('12345678901234567890')
+    x = False
+except: pass
+assert x
+
+# add new namespace works
+try: brain.set_namespace('default')
 except:
-    pass
+    x = False
+assert x
 
-# start the brain after killing plasma_store; use new size, and path
-brain.start(size=75000000,path='/tmp/plasma1')
-assert brain.size==75000000
+# removing default namespace fails
+try:
+    brain.remove_namespace('default')
+    x = False
+except: pass
+assert x
 
-print('dash-brain tests passed!')
+# add new namespace (normal)
+brain.set_namespace('newname')
+assert brain.namespace=='newname'
+assert brain.show_namespaces()=={'default','newname'}
+
+# namespace names don't overlap
+assert brain.names()==[]
+
+# can see all names in all namespaces
+assert brain.names(namespace='all') != []
+
+# can add value with same name without problem 
+brain['a'] = 6
+
+# not pulling value from default namespace
+assert brain['a'] != 5
+
+# value in new namespace has new namespace in its brain_object
+assert brain.info('a')['namespace']=='newname'
+
+# can remove value in current namespace
+brain.forget('a')
+try: 
+    print(brain['a'])
+    x=False
+except: pass
+assert x
+
+# removing value in new namespace does not affect other namespace
+brain.set_namespace('default')
+assert brain['a']==5
+
+# can remove other namespace from any other namespace, or default;
+# removing a namespace from that namespace switches it to default
+brain.set_namespace('joyful')
+brain.set_namespace('donuts')
+brain.remove_namespace('joyful')
+assert brain.namespace=='donuts'
+brain.remove_namespace('donuts')
+assert brain.namespace=='default'
+brain.remove_namespace('newname')
+assert brain.show_namespaces()=={'default'}
+
+# removing a namespace removes its values
+assert len(brain.names(namespace='all'))==1
+
+print('all brain-plasma tests passed!')
