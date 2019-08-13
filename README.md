@@ -6,27 +6,18 @@ Sharing data between callbacks, on Apache Plasma. Built for Dash, useful anywher
 
 `brain-plasma` is a high-level wrapper for the Apache Plasma PlasmaClient API with an added naming and namespacing system.
 
-**BIG RELEASE WITH BREAKING CHANGES: `v0.2`**
-
-- changed parameter order of `learn()` to `('name',thing)` which is more intuitive (but you should always use bracket notation)
-- removed ability to start, kill, or resize the underlying brain instance (stability)
-- added unique intra-plasma-instance namespaces
-- `len(brain)`, `del brain['this']` and `'this' in brain` are now avilable (implemented `__len__`, `__delitem__`, and `__contains__`)
-
-NOTE: stability problems should be resolved in `v0.2`. 
-
 ---
 ## Basic Use
 
 Basic idea: the brain has a list of names that it has "learned" that are attached to objects in Plasma. Learn, recall, and delete stored objects, call it like a dictionary with bracket notation e.g. `brain['x']` and `del`.
 
-```
+```bash
 pip install pyarrow
 pip install brain-plasma
 plasma_store -m 50000000 -s /tmp/plasma
 ```
 
-```
+```python
 from brain_plasma import Brain
 brain = Brain()
 
@@ -51,7 +42,7 @@ brain.names()
 
 Namespaces
 
-```
+```python
 # change namespace
 brain['this'] = 'default text object'
 brain.set_namespace('newname')
@@ -64,6 +55,16 @@ brain['this']
 brain.names(namespaces='all')
 ['this','this']
 ```
+
+**BIG RELEASE WITH BREAKING CHANGES: `v0.2`**
+
+- changed parameter order of `learn()` to `('name',thing)` which is more intuitive (but you should always use bracket notation)
+- removed ability to start, kill, or resize the underlying brain instance (stability)
+- added unique intra-plasma-instance namespaces
+- `len(brain)`, `del brain['this']` and `'this' in brain` are now avilable (implemented `__len__`, `__delitem__`, and `__contains__`)
+
+NOTE: stability problems should be resolved in `v0.2`. 
+
 
 ## Key Features
 
@@ -89,12 +90,11 @@ brain.names(namespaces='all')
 
 Use the testing script `tests.py`.
 
-```
-# terminal
+```bash
 plasma_store -m 50000000 -s /tmp/brain_plasma_test
 ```
 
-```
+```bash
 # new terminal
 git clone https://github.com/russellromney/brain-plasma
 cd brain-plasma
@@ -142,7 +142,7 @@ str - the name of the current namespace
 
 Store an item's value and recall the value with bracket notation:
 
-```
+```python
 brain['this'] = 5
 x = brain['this']
 ```
