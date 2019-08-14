@@ -1,7 +1,6 @@
 from pyarrow import plasma
 import os
 import random
-import string
 import time
 
 # apache plasma documentation
@@ -92,12 +91,11 @@ class Brain:
 
     def forget(self,name):
         '''delete an object based on its Brain name'''
-        names_ = self._brain_names_ids(self.client)
         brain_object = self._brain_names_objects(self.client)
-        for x in brain_object:
-            if x['name']==name:
-                brain_object=x
-                break
+        brain_object = next(filter(lambda x : x['name']==name,brain_object),None)
+        if brain_object is None:
+            raise Exception('BrainError: name "{}" does not exist'.format(name))
+        names_ = self._brain_names_ids(self.client)
         this_id = names_[name]
         name_id = plasma.ObjectID(brain_object['name_id'])
         self.client.delete([this_id,name_id])
@@ -262,11 +260,9 @@ class Brain:
         if self._brain_name_exists(name,client):
             # get the brain_object for the old name
             brain_object = self._brain_names_objects(client)
-            for x in brain_object:
-                if x['name']==name:
-                    brain_object=x
-                    break
-            # delete the old name and thing objects
+            brain_object = next(filter(lambda x : x['name']==name,brain_object),None)
+            if brain_object is None:
+                raise BaseException('BrainError: Brain does not know the name "{}" in namespace "{}"'.format(name,self.namespace))            # delete the old name and thing objects
             client.delete([plasma.ObjectID(brain_object['name_id']),plasma.ObjectID(brain_object['id'])])
             # get the new ids
             thing_id = plasma.ObjectID(brain_object['id'])
@@ -313,8 +309,7 @@ class Brain:
 
     def _brain_name_exists(self,name,client):
         '''confirm that the plasma ObjectID for a given name'''
-        names_ = self._brain_names_ids(client)
-        return (name in names_.keys())
+        return (name in self._brain_names_ids(client).keys())
 
 
     def _brain_name_error(self,name,client):
@@ -325,6 +320,5 @@ class Brain:
 
     def _brain_create_named_object(self,name):
         '''return a random ObjectID that has <self.namespace> in it'''
-        letters = string.ascii_letters
-        random_letters = ''.join(random.choice(letters) for i in range(20-len(self.namespace)))
+        random_letters = ''.join(random.choice('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') for i in range(20-len(self.namespace)))
         return plasma.ObjectID(bytes(self.namespace+random_letters,'utf-8'))
