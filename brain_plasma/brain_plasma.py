@@ -104,7 +104,7 @@ class Brain:
     
 
     def names(self,namespace=None):
-        '''return a list of the names that brain knows, in all namespaces'''
+        '''return a list of the names that brain knows, in all namespaces if namespace=="all" '''
         current_namespace = self.namespace
         if namespace is None:
             namespace = self.namespace
