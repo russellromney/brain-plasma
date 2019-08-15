@@ -1,10 +1,6 @@
 # brain-plasma
 
-Sharing data between callbacks, on Apache Plasma. Built for Dash, useful anywhere. Only supported on Mac/Linux with Python 3.5+.
-
----
-
-`brain-plasma` is a high-level wrapper for the Apache Plasma PlasmaClient API with an added naming and namespacing system.
+`brain-plasma` is a high-level wrapper for the Apache Plasma PlasmaClient API with an added naming and namespacing system. Only supported on Mac/Linux with Python 3.5+.
 
 ---
 ## Basic Use
