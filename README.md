@@ -239,14 +239,6 @@ Disconnect `Brain.client` from Plasma. Must use `Brain.wake_up()` to use the `Br
 
 Reconnect `Brain.client` to Plasma.
 
-`Brain.start(path=None,size=None)`
-
-Restarts the `plasma_store` process for a dead `Brain`. NOTE: DOES NOT RESTART AN EXISTING PLASMA_STORE AT THAT PATH.
-
-`Brain.dead(i_am_sure=False)`
-
-If i_am_sure==True, disconnect `Brain.client` and kill the `plasma_store` process with `$ pkill plasma_store`
-
 ---
 
 ## Notes and TODO
