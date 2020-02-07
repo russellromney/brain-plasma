@@ -81,6 +81,7 @@ NOTE: stability problems should be resolved in `v0.2`.
 **Current Drawbacks**
 
 1. Limited to Arrow-serializable objects. This includes Pandas, NumPy, TensorFlow, all built-in Python objects, and many more. However, some things will not be supported. Check before using.
+2. Slows down (to dozens or hundreds of milliseconds per transaction) with many objects, specifically large objects. Best used for fewer than 500 objects, mostly large. Other tech has better solutions for many small objects.
 
 ## Testing
 
