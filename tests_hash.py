@@ -1,4 +1,4 @@
-from brain_plasma import Brain
+from brain_plasma.brain_plasma_hash import Brain
 import json
 import pandas as pd
 import numpy as np
@@ -76,7 +76,7 @@ brain['q'] = q
 assert set(brain.names())==set([thing for thing in 'abcdefghijklmnopq'])
 
 # read dictionary of names:ObjectIDs
-temp = brain.knowledge()
+temp = brain.metadata()
 print(temp)
 
 # get metadata about objects
@@ -125,7 +125,7 @@ brain.wake_up()
 ## namespaces
 print('testing namespaces')
 # current namespace is 'default'
-assert brain.show_namespaces()=={'default'}
+assert brain.namespaces()=={'default'}
 
 # add value to default namespace
 brain['a'] = 5
@@ -164,7 +164,7 @@ assert x
 # add new namespace (normal)
 brain.set_namespace('newname')
 assert brain.namespace=='newname'
-assert brain.show_namespaces()=={'default','newname'}
+assert brain.namespaces()=={'default','newname'}
 
 # namespace names don't overlap
 assert brain.names()==[]
@@ -202,7 +202,7 @@ assert brain.namespace=='donuts'
 brain.remove_namespace('donuts')
 assert brain.namespace=='default'
 brain.remove_namespace('newname')
-assert brain.show_namespaces()=={'default'}
+assert brain.namespaces()=={'default'}
 
 # removing a namespace removes its values
 assert len(brain.names(namespace='all'))==1

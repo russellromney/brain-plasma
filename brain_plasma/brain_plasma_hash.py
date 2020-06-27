@@ -1,5 +1,5 @@
 import traceback
-from typing import ByteString
+from typing import ByteString, Iterable
 import hashlib
 from pyarrow import plasma
 import os
@@ -32,7 +32,15 @@ class Brain:
         self.mb = "{} MB".format(round(self.bytes / 1000000))
         self.set_namespace(namespace)
 
-    ### core functions
+    ##########################################################################################
+    # CORE FUNCTIONS
+    ##########################################################################################
+    @property
+    def reserved_names(self):
+        return [
+            'brain_namespaces_set',
+        ]
+
     def learn(self, name: str, thing: str, description: str = None):
         """
         put a given object to the plasma store
@@ -160,7 +168,7 @@ class Brain:
 
     def info(self, name):
         """return metadata object based on its Brain name"""
-        names_ = self._brain_names_objects(self.client)
+        names_ = self.metadata(output='list')
         for x in names_:
             if x["name"] == name:
                 brain_object = x
@@ -186,24 +194,26 @@ class Brain:
             self.client.delete([metadata_id, value_id])
 
     def names(self, namespace=None):
-        """return a list of the names that brain knows, in all namespaces"""
+        """
+        return a list of the names that brain knows
+        in all namespaces or only in current (default)
+
+        if namespace = "all", returns names from all namespaces
+        """
         current_namespace = self.namespace
         if namespace is None:
             namespace = self.namespace
+
         names = []
         if namespace == "all":
-            # for each namespace, add the name objects to the list of names
-            for namespace in self.show_namespaces():
+            # FOR EACH NAMESPACE, ADD THE NAME OBJECTS TO THE LIST OF NAMES
+            for namespace in self.namespaces():
                 self.namespace = namespace
-                names.extend(
-                    [x["name"] for x in self._brain_names_objects(self.client)]
-                )
+                names.extend([x["name"] for x in self.metadata(output='list')])
         else:
-            # return all the names and object_ids in that namespace only
+            # RETURN ALL THE NAMES AND OBJECT_IDS IN THAT NAMESPACE ONLY
             names = [
-                x["name"]
-                for x in self._brain_names_objects(self.client)
-                if x["namespace"] == self.namespace
+                x["name"] for x in self.metadata(output='list') if x["namespace"] == self.namespace
             ]
 
         self.namespace = current_namespace
@@ -211,12 +221,8 @@ class Brain:
 
     def ids(self):
         """return list of Object IDs the brain knows that are attached to names"""
-        names_ = self._brain_names_objects(self.client)
+        names_ = self.metadata()
         return [plasma.ObjectID(x["id"]) for x in names_]
-
-    def knowledge(self):
-        """return a dictionary of all names and ids that brain knows"""
-        return self._brain_names_objects(self.client)
 
     def sleep(self):
         """disconnect from the client"""
@@ -246,9 +252,79 @@ class Brain:
         self.mb = "{} MB".format(round(self.bytes / 1000000))
         return self.bytes
 
-    def object_map(self):
-        """return a dictionary of names and their associated ObjectIDs"""
-        return self._brain_names_ids()
+    def object_id(self, name: str) -> plasma.ObjectID:
+        """
+        get the ObjectId of the value in the store for name
+
+        returns None if it doesn't exist
+        """
+        if not self.exists(name):
+            return None
+        metadata = self.metadata(name)
+        return plasma.ObjectID(metadata["value_id"])
+
+    def object_ids(self) -> dict:
+        """
+        return a dictionary of names and their ObjectIDs
+        
+        limited to names in the current namespace
+        """
+        names_ = self.metadata()
+        return {x["name"]: plasma.ObjectID(x["id"]) for x in names_}
+
+    def metadata(self, *names, output: str = "dict") -> Iterable:
+        """
+        return a dict/list of all names and their associated metadata in current namespace
+        
+        accepts one or many names
+        if only one name, only grabs one metadata
+        otherwise, grabs all the metadata and returns them in a dictionary/list
+
+        note on this: 
+            every name metadata is stored as a metadata object with the prefix b'<namespace>'
+            so brain gets the names by 
+                getting all object ids
+                any that have b'<namespace>' in them will be dictionaries of metadata
+
+        Errors:
+            TypeError
+        """
+        if output not in ["dict", "list"]:
+            raise TypeError('Output must be "list" or "dict"')
+
+        if len(names) == 1:
+            name = names[0]
+            if not self.exists(name):
+                return None
+            metadata_id = self._name_to_namespace_hash(name)
+            metadata = self.client.get(metadata_id)
+            return metadata
+
+        # GET ALL IDS IN THE STORE
+        all_ids = list(self.client.list().keys())
+
+        # GET THE FIRST SEVERAL CHARACTERS OF THE OBJECTID REPRESENTATION TO USE TO FILTER NAMES
+        namespace_str = self.namespace.encode()
+
+        # GET ALL IDS THAT CONTAIN THE NAMESPACE REPRESENTATION
+        # I.E. ALL THE METADATA
+        known_ids = [x for x in all_ids if x.binary().startswith(namespace_str)]
+
+        # GET ALL ACTUAL OBJECTS (NAMES AND TYPE) WITH THOSE IDS
+        all_metadata = self.client.get(known_ids, timeout_ms=100)
+
+        if output == "dict":
+            all_metadata = {meta["name"]: meta for meta in all_metadata}
+
+        # RETURNS ALL NAMES IF NO NAMES ARE SPECIFIED
+        if len(names) == 0:
+            return all_metadata
+
+        # RETURN ONLY THE NAMES SPECIFIED; NONE IF DOESN'T EXIST
+        else:
+            if output == "dict":
+                return {name: all_metadata.get(name) for name in names}
+            return all_metadata
 
     def used(self):
         """get the total used bytes in the underlying plasma_store"""
@@ -263,10 +339,13 @@ class Brain:
         return self.size() - self.used()
 
     def set_namespace(self, namespace=None):
-        """either return the current namespace or change the current namespace to something new"""
+        """
+        either return the current namespace or change the current namespace to something new
+        """
         if namespace is None:
             return self.namespace
-        # must be at least four characters and fewer than 15
+        
+        # MUST BE AT LEAST FIVE CHARACTERS AND FEWER THAN 15
         if len(namespace) < 5:
             raise BrainNamespaceNameError(
                 f"Namespace wrong length; 5 >= namespace >= 15; name {namespace} is {len(namespace)}"
@@ -276,29 +355,34 @@ class Brain:
                 f"Namespace wrong length; 5 >= namespace >= 15; name {namespace} is {len(namespace)}"
             )
 
-        # change the namespace and acknowledge the change
+        # CHANGE THE NAMESPACE AND ACKNOWLEDGE THE CHANGE
         self.namespace = namespace
 
-        # if the namespace object exists already, just add the new namespace
+        # IF THE NAMESPACE OBJECT EXISTS ALREADY, JUST ADD THE NEW NAMESPACE
         if plasma.ObjectID(b"brain_namespaces_set") in self.client.list().keys():
-            # add to namespaces
+            # ADD TO NAMESPACES
             namespaces = self.client.get(
                 plasma.ObjectID(b"brain_namespaces_set")
             ).union([self.namespace, "default"])
-            # remove old namespaces object
+            # REMOVE OLD NAMESPACES OBJECT
             self.client.delete([plasma.ObjectID(b"brain_namespaces_set")])
-            # assign new namespaces object
+            # ASSIGN NEW NAMESPACES OBJECT
             self.client.put(namespaces, plasma.ObjectID(b"brain_namespaces_set"))
-        # otherwise, create the namespaces object and add to plasma
+        
+        # OTHERWISE, CREATE THE NAMESPACES OBJECT AND ADD TO PLASMA
         else:
             self.client.put(
                 set([self.namespace, "default"]),
                 plasma.ObjectID(b"brain_namespaces_set"),
             )
-        # return the current namespace
+        
+        # RETURN THE CURRENT NAMESPACE
         return self.namespace
 
-    def show_namespaces(self):
+    def namespaces(self):
+        """
+        return set of all namespaces available in the store
+        """
         return self.client.get(plasma.ObjectID(b"brain_namespaces_set"))
 
     def remove_namespace(self, namespace=None) -> str:
@@ -309,42 +393,42 @@ class Brain:
             BrainNamespaceRemoveDefaultError
             BrainNamespaceNotExistError
         """
-        # if no namespace is defined, just remove the current namespace
+        # IF NO NAMESPACE IS DEFINED, JUST REMOVE THE CURRENT NAMESPACE
         if namespace == None:
             namespace == self.namespace
 
-        # cannot delete the default namespace
+        # CANNOT DELETE THE DEFAULT NAMESPACE
         if namespace == "default":
             raise BrainNamespaceRemoveDefaultError("Cannot remove default namespace")
 
-        # cannot delete a namespace that doesn't exist
-        if namespace not in self.show_namespaces():
+        # CANNOT DELETE A NAMESPACE THAT DOESN'T EXIST
+        if namespace not in self.namespaces():
             raise BrainNamespaceNotExistError(f'Namespace "{namespace}" does not exist')
 
-        # save the current namespace
+        # SAVE THE CURRENT NAMESPACE
         current_namespace = self.namespace
         self.namespace = namespace
 
-        # delete all the variables in <namespace>
+        # DELETE ALL THE VARIABLES IN <NAMESPACE>
         for name in self.names():
             self.forget(name)
 
-        ## remove namespace from set of namespaces
-        # get current namespaces
+        ## REMOVE NAMESPACE FROM SET OF NAMESPACES
+        # GET CURRENT NAMESPACES
         namespaces = self.client.get(plasma.ObjectID(b"brain_namespaces_set")).union(
             [self.namespace, "default"]
         )
-        # remove <namespace> from current namespaces set
+        # REMOVE <NAMESPACE> FROM CURRENT NAMESPACES SET
         namespaces = namespaces - set([namespace])
-        # remove the old namespaces object
+        # REMOVE THE OLD NAMESPACES OBJECT
         self.client.delete([plasma.ObjectID(b"brain_namespaces_set")])
-        # add the new namespaces object
+        # ADD THE NEW NAMESPACES OBJECT
         self.client.put(namespaces, plasma.ObjectID(b"brain_namespaces_set"))
 
-        # if we cleared the current namespace, change the namespace to default
+        # IF WE CLEARED THE CURRENT NAMESPACE, CHANGE THE NAMESPACE TO DEFAULT
         if current_namespace == namespace:
             self.namespace = "default"
-        # otherwise, just change self.namespace back to what it was
+        # OTHERWISE, JUST CHANGE SELF.NAMESPACE BACK TO WHAT IT WAS
         else:
             self.namespace = current_namespace
 
@@ -355,36 +439,6 @@ class Brain:
     ##########################################################################################
     # UTILITY FUNCTIONS
     ##########################################################################################
-    def _brain_new_ids_or_existing_ids(self, name, client):
-        """
-        if name exists, returns object id of that name and that client
-        
-        else create new ids
-        """
-        if self.exists(name):
-            # GET THE BRAIN_OBJECT FOR THE OLD NAME
-            brain_object = self._brain_names_objects(client)
-            for x in brain_object:
-                if x["name"] == name:
-                    brain_object = x
-                    break
-            # NOTE THIS BEHAVIOR IS NOT EXPECTED BY THE USER
-            # DELETE THE OLD NAME AND THING OBJECTS
-            client.delete(
-                [
-                    plasma.ObjectID(brain_object["name_id"]),
-                    plasma.ObjectID(brain_object["id"]),
-                ]
-            )
-            # GET THE NEW IDS
-            thing_id = plasma.ObjectID(brain_object["id"])
-            name_id = plasma.ObjectID(brain_object["name_id"])
-        else:
-            # CREATE A NEW NAME ID AND THING ID
-            name_id = self._name_to_justified_hash(name)
-            thing_id = plasma.ObjectID.from_random()
-        return thing_id, name_id
-
     def _hash(self, name: str, digest_bytes: int) -> ByteString:
         """
         return a bytestring with length hex_bytes of the name string
@@ -423,7 +477,7 @@ class Brain:
         combined = encoded + name_hash
         return plasma.ObjectID(combined)
 
-    def _name_to_namespace_hash(self, name: str) -> plasma.ObjectID:
+    def _name_to_namespace_hash(self, name: str, namespace: str=None) -> plasma.ObjectID:
         """
         create an ObjectId that contains the namespace name + the hash of the name
         name: "this"
@@ -432,50 +486,13 @@ class Brain:
         combined (20-byte): b'this%\x14\x997F\x08I\xfb\xe4\xc3\xf8V\x98\x13\x0e\xee'
         return object id: ObjectID(7468697325149937460849fbe4c3f85698130eee)
         """
+        if not namespace:
+            namespace = self.namespace
+
         # NAMESPACE CAN'T BE SET TO AN INCORRECT SIZE
-        namespace_len = len(self.namespace)
+        namespace_len = len(namespace)
         hash_len = 20 - namespace_len
-        encoded = self.namespace.encode()
+        encoded = namespace.encode()
         name_hash = self._hash(name, hash_len)
         combined = encoded + name_hash
         return plasma.ObjectID(combined)
-
-    def _brain_names_ids(self):
-        """get dict of names and ObjectIDs in the store"""
-        names_ = self._brain_names_objects(self.client)
-        return {x["name"]: plasma.ObjectID(x["id"]) for x in names_}
-
-    def _brain_names_objects(self, client):
-        """
-        get a dictionary of names and ids that brain knows
-
-        note on this: 
-            - the convention is that every name that brain knows is
-            stored separately as an object in the plasma store with 
-            the prefix b'<namespace>'...
-            - so brain gets the names by 
-                - getting all object ids
-                - any that have b'<namespace>' in them will be dictionaries of 
-                type (numpy, general, pandas) and ObjectID, or other metadata
-        """
-        # get all ids
-        all_ids = list(client.list().keys())
-
-        # get the first several characters of the ObjectID representation to use to filter names
-        namespace_str = str(self._brain_create_named_object(self.namespace))[9:17]
-
-        # get all ids that contain the namespace representation
-        known_ids = [x for x in all_ids if namespace_str in str(x).lower()]
-
-        # get all actual objects (names and type) with those ids
-        values = client.get(known_ids, timeout_ms=100)
-        return values
-
-    def _brain_create_named_object(self, name):
-        """return a random ObjectID that has <self.namespace> in it"""
-        letters = string.ascii_letters
-        random_letters = "".join(
-            random.choice(letters) for i in range(20 - len(self.namespace))
-        )
-        return plasma.ObjectID(bytes(self.namespace + random_letters, "utf-8"))
-
