@@ -95,7 +95,7 @@ plasma_store -m 50000000 -s /tmp/brain_plasma_test
 # new terminal
 git clone https://github.com/russellromney/brain-plasma
 cd brain-plasma
-python tests.py
+python tests/tests.py
 ```
 
 ---
@@ -108,7 +108,7 @@ python tests.py
 
 Parameters:
 
-* `path` - which path to use to start and/or connect to the plasma store
+* `path` - which path to use to connect to the plasma store
 * `namespace` - which namespace to use
 
 #### Attributes
@@ -173,7 +173,7 @@ This is because namespace strings are used as the prefix of the plasma.ObjectID 
 
 Changes `self.namespace` to `namespace` and adds `namespace` to the unique namespace object if it does not already exist. Returns name of namespace if successful. If namespace is not specified, simply returns name of current namespace.
 
-`Brain.show_namespaces()`
+`Brain.namespaces()`
 
 Returns set of unique namespaces. 
 
@@ -183,20 +183,7 @@ Removes namespace `namespace` and removes all of the objects in `namespace`. If 
 
 **Object metadata**
 
-`Brain.info(name)`
-
-Get the metadata dict object associated with the object with name `name`.
-
-Structure:
-{
-    name (variable name), 
-    name_id (bytes of the ObjectID for the index object), 
-    object_id(bytes of ObjectID for the value), 
-    description (False if not assigned), 
-    namespace (the object's namespace)
-}
-
-`Brain.object_map()`
+`Brain.object_ids()`
 
 Get a dictionary of the names and their associated object IDs. Allows for more granular work with PlasmaClient. Simply calls the helper function `brain_names_ids`.
 
@@ -212,9 +199,25 @@ Use `'name' in brain` as a shortcut for checking if a name is known.
 
 Get a list of all the plasma.ObjectID instances that brain knows the name of.
 
-`Brain.knowledge()`
 
-Get the metadata objects for all known names in the namespace `brain.info()` for each known name (through helper function `_brain_names_objects`)
+`Brain.metadata(*names, output='dict')`
+
+Get a dictionary (or list if `output='list'`) of all the metadata for the names you list. 
+Returns a single dict if you provide only one name. Otherwise returns a list of metadata
+objects or dict of name:metadata pairs.
+
+Get the metadata dict object associated with the object with name `name`.
+
+Metadata object structure:
+```
+{
+    name: str (variable name), 
+    metadata_id: bytes (bytes of the ObjectID for the index object), 
+    value_id: bytes (bytes of ObjectID for the value), 
+    description: str (False if not assigned), 
+    namespace: str (the object's namespace)
+}
+```
 
 **Store Metadata**
 
@@ -256,13 +259,12 @@ Apache Plasma docs: https://arrow.apache.org/docs/python/plasma.html#
 * ability to specify namespace for all class methods.
   * this would allow you to do everything declaratively without needing another line of code
   * right now everything uses self.namespace
-* copy behavior of dictionaries i.e. allow indexed `__setitem__`. `__getitem__` is implicitly supported.
 * do special things optimizing the PlasmaClient interactions with NumPy and Pandas objects
 * ability to persist items on disk and recall them with the same API
 * specify in docs or with error messages which objects cannot be used due to serialization constraints
 * ability to dump all/specific objects and name reference to a declared disk location
   * plus ability to recover these changes later - maybe make it standard behaviour to check the standard location
-* brain logging (I need help with this - don't know logging best practices)
+* brain logging
 
 
 ---

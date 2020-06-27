@@ -166,14 +166,6 @@ class Brain:
     def __len__(self):
         return len(self.names())
 
-    def info(self, name):
-        """return metadata object based on its Brain name"""
-        names_ = self.metadata(output='list')
-        for x in names_:
-            if x["name"] == name:
-                brain_object = x
-        return brain_object
-
     def forget(self, name: str):
         """
         delete an object based on its name
