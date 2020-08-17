@@ -236,6 +236,7 @@ class Brain:
             BrainClientDisconnectedError
         """
         try:
+            # IF THIS DOESN'T WORK, CLIENT IS DISCONNECTED
             temp = self.client.put(5)
             self.client.delete([temp])
         except:
