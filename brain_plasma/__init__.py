@@ -1,1 +1,2 @@
-from .brain_plasma import Brain
+from .brain import Brain
+from .brain_client import BrainClient
