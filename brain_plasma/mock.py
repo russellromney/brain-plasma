@@ -1,8 +1,5 @@
 from pyarrow import plasma
 
-from brain_plasma.brain_plasma_hash import Brain
-from brain_plasma.brain_client import BrainClient
-
 
 class MockPlasmaClient:
     """

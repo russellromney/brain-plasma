@@ -1,9 +1,9 @@
 import pytest
 from pyarrow import plasma
 
-from brain_plasma.brain_plasma_hash import Brain
-from brain_plasma.mock import MockPlasmaClient
+from brain_plasma import Brain
 from brain_plasma import exceptions
+from brain_plasma.mock import MockPlasmaClient
 
 
 @pytest.fixture(scope="function")

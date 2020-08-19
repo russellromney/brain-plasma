@@ -1,11 +1,11 @@
 import time
 import uuid
 
-from brain_plasma import brain_plasma
-from brain_plasma import brain_plasma_hash
+from brain_plasma.v02compatibility import Brain as v02Brain
+from brain_plasma import Brain
 
-brain = brain_plasma.Brain(path="/tmp/brain")
-hbrain = brain_plasma_hash.Brain(path="/tmp/hash-brain")
+brain = v02Brain(path="/tmp/brain")
+hbrain = Brain(path="/tmp/hash-brain")
 few = 10
 many = 100
 times = {few: {"old":{},'hash':{}}, many: {"old":{},'hash':{}}}
