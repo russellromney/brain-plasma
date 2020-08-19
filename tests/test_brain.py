@@ -98,34 +98,61 @@ def test_object_ids(brain):
     }
 
 
+def test_metadata_good(brain):
+    brain["this"] = "that"
+    assert len(brain.metadata()) == 1
+
+
+def test_metadata_bad(brain):
+    with pytest.raises(TypeError):
+        brain.metadata("this", output="int")
+
+
 def test_set_namespace_good(brain):
-    assert brain.namespace == 'default'
-    brain.set_namespace('somespace')
-    assert brain.namespace == 'somespace'
+    assert brain.namespace == "default"
+    brain.set_namespace("somespace")
+    assert brain.namespace == "somespace"
+
 
 def test_set_namespace_bad(brain):
     with pytest.raises(exceptions.BrainNamespaceNameError):
-        brain.set_namespace('1')
-    
+        brain.set_namespace("1")
+
     with pytest.raises(exceptions.BrainNamespaceNameError):
-        brain.set_namespace('some way too long namespace')
+        brain.set_namespace("some way too long namespace")
+
 
 def test_remove_namespace(brain):
-    brain.set_namespace('somespace')
-    brain['that'] = 'this'
-    brain.remove_namespace('somespace')
-    assert brain.namespace == 'default'
-    assert not 'that' in brain
-    
+    brain.set_namespace("somespace")
+    brain["that"] = "this"
+    brain.remove_namespace("somespace")
+    assert brain.namespace == "default"
+    assert not "that" in brain
+
+
 def test_hash(brain):
-    assert brain._hash('this',20) == b'\xbdVD\x9e6\xa6\x17\xc7\xb6xm:(\xf1\x8c\x84\x13\xdd-X'
-    assert brain._hash('this',10) == b'}\xff, \xb7]%\x02\x0ei'
+    assert (
+        brain._hash("this", 20)
+        == b"\xbdVD\x9e6\xa6\x17\xc7\xb6xm:(\xf1\x8c\x84\x13\xdd-X"
+    )
+    assert brain._hash("this", 10) == b"}\xff, \xb7]%\x02\x0ei"
+
 
 def test_name_to_hash(brain):
-    assert brain._name_to_hash('this') == plasma.ObjectID(b'\xbdVD\x9e6\xa6\x17\xc7\xb6xm:(\xf1\x8c\x84\x13\xdd-X')
+    assert brain._name_to_hash("this") == plasma.ObjectID(
+        b"\xbdVD\x9e6\xa6\x17\xc7\xb6xm:(\xf1\x8c\x84\x13\xdd-X"
+    )
+
 
 def test_name_to_justified_hash(brain):
-    assert brain._name_to_justified_hash('this').binary() == b'this%\x14\x997F\x08I\xfb\xe4\xc3\xf8V\x98\x13\x0e\xee'
+    assert (
+        brain._name_to_justified_hash("this").binary()
+        == b"this%\x14\x997F\x08I\xfb\xe4\xc3\xf8V\x98\x13\x0e\xee"
+    )
+
 
 def test_name_to_namespace_hash(brain):
-    assert brain._name_to_namespace_hash('this').binary() == b'default\xee\xd2\xee\x1a\x9do\x15ue.Y\xe1\xd1'
+    assert (
+        brain._name_to_namespace_hash("this").binary()
+        == b"default\xee\xd2\xee\x1a\x9do\x15ue.Y\xe1\xd1"
+    )

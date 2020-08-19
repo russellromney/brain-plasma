@@ -26,7 +26,9 @@ from .exceptions import (
 
 
 class Brain:
-    def __init__(self, namespace="default", path="/tmp/plasma", ClientClass=BrainClient):
+    def __init__(
+        self, namespace="default", path="/tmp/plasma", ClientClass=BrainClient
+    ):
         self.path = path
         self.namespace = namespace
         self.client = ClientClass(path)
@@ -51,12 +53,10 @@ class Brain:
 
     def __len__(self):
         return len(self.names())
-    
+
     @property
     def reserved_names(self):
-        return [
-            'brain_namespaces_set',
-        ]
+        return ["brain_namespaces_set"]
 
     def learn(self, name: str, thing: str, description: str = None):
         """
@@ -203,11 +203,13 @@ class Brain:
             # FOR EACH NAMESPACE, ADD THE NAME OBJECTS TO THE LIST OF NAMES
             for namespace in self.namespaces():
                 self.namespace = namespace
-                names.extend([x["name"] for x in self.metadata(output='list')])
+                names.extend([x["name"] for x in self.metadata(output="list")])
         else:
             # RETURN ALL THE NAMES AND OBJECT_IDS IN THAT NAMESPACE ONLY
             names = [
-                x["name"] for x in self.metadata(output='list') if x["namespace"] == self.namespace
+                x["name"]
+                for x in self.metadata(output="list")
+                if x["namespace"] == self.namespace
             ]
 
         self.namespace = current_namespace
@@ -240,7 +242,7 @@ class Brain:
         try:
             # IF THIS DOESN'T WORK, CLIENT IS DISCONNECTED
             temp = plasma.ObjectID.from_random()
-            self.client.put(5,temp)
+            self.client.put(5, temp)
             self.client.delete([temp])
         except:
             raise BrainClientDisconnectedError
@@ -340,7 +342,7 @@ class Brain:
         """
         if namespace is None:
             return self.namespace
-        
+
         # MUST BE AT LEAST FIVE CHARACTERS AND FEWER THAN 15
         if len(namespace) < 5:
             raise BrainNamespaceNameError(
@@ -364,14 +366,14 @@ class Brain:
             self.client.delete([plasma.ObjectID(b"brain_namespaces_set")])
             # ASSIGN NEW NAMESPACES OBJECT
             self.client.put(namespaces, plasma.ObjectID(b"brain_namespaces_set"))
-        
+
         # OTHERWISE, CREATE THE NAMESPACES OBJECT AND ADD TO PLASMA
         else:
             self.client.put(
                 set([self.namespace, "default"]),
                 plasma.ObjectID(b"brain_namespaces_set"),
             )
-        
+
         # RETURN THE CURRENT NAMESPACE
         return self.namespace
 
@@ -474,7 +476,9 @@ class Brain:
         combined = encoded + name_hash
         return plasma.ObjectID(combined)
 
-    def _name_to_namespace_hash(self, name: str, namespace: str=None) -> plasma.ObjectID:
+    def _name_to_namespace_hash(
+        self, name: str, namespace: str = None
+    ) -> plasma.ObjectID:
         """
         create an ObjectId that contains the namespace name + the hash of the name
         name: "this"
