@@ -8,7 +8,7 @@ import time
 # https://arrow.apache.org/docs/python/plasma.html
 
 
-class Brain:
+class v02Brain:
     def __init__(self, namespace="default", path="/tmp/plasma"):
         self.path = path
         self.namespace = namespace
