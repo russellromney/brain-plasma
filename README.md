@@ -53,6 +53,8 @@ brain.names(namespaces='all')
 ['this','this']
 ```
 
+The API/features in `brain-plasma` should be considered alpha stage. It might change without notice.
+
 ## Key Features
 
 1. Create and reference named shared-memory Python objects
