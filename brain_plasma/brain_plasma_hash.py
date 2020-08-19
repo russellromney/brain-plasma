@@ -6,6 +6,8 @@ import os
 import random
 import string
 import time
+
+from .brain_client import BrainClient
 from .exceptions import (
     BrainNameNotExistError,
     BrainNamespaceNameError,
@@ -24,10 +26,10 @@ from .exceptions import (
 
 
 class Brain:
-    def __init__(self, namespace="default", path="/tmp/plasma"):
+    def __init__(self, namespace="default", path="/tmp/plasma", ClientClass=BrainClient):
         self.path = path
         self.namespace = namespace
-        self.client = plasma.connect(self.path, num_retries=5)
+        self.client = ClientClass(path)
         self.bytes = self.size()
         self.mb = "{} MB".format(round(self.bytes / 1000000))
         self.set_namespace(namespace)
@@ -35,6 +37,21 @@ class Brain:
     ##########################################################################################
     # CORE FUNCTIONS
     ##########################################################################################
+    def __setitem__(self, name, item):
+        self.learn(name, item)
+
+    def __getitem__(self, name):
+        return self.recall(name)
+
+    def __delitem__(self, name):
+        return self.forget(name)
+
+    def __contains__(self, name):
+        return name in self.names()
+
+    def __len__(self):
+        return len(self.names())
+    
     @property
     def reserved_names(self):
         return [
@@ -127,9 +144,6 @@ class Brain:
                     f"Unable to set value with name: {name}. Rolled back"
                 )
 
-    def __setitem__(self, name, item):
-        self.learn(name, item)
-
     def recall(self, name):
         """
         get an object value based on its Brain name
@@ -153,18 +167,6 @@ class Brain:
         """
         id_hash = self._name_to_namespace_hash(name)
         return self.client.contains(id_hash)
-
-    def __getitem__(self, name):
-        return self.recall(name)
-
-    def __delitem__(self, name):
-        return self.forget(name)
-
-    def __contains__(self, name):
-        return name in self.names()
-
-    def __len__(self):
-        return len(self.names())
 
     def forget(self, name: str):
         """
@@ -214,7 +216,7 @@ class Brain:
     def ids(self):
         """return list of Object IDs the brain knows that are attached to names"""
         names_ = self.metadata()
-        return [plasma.ObjectID(x["id"]) for x in names_]
+        return [plasma.ObjectID(x["value_id"]) for x in names_.values()]
 
     def sleep(self):
         """disconnect from the client"""
@@ -237,7 +239,8 @@ class Brain:
         """
         try:
             # IF THIS DOESN'T WORK, CLIENT IS DISCONNECTED
-            temp = self.client.put(5)
+            temp = plasma.ObjectID.from_random()
+            self.client.put(5,temp)
             self.client.delete([temp])
         except:
             raise BrainClientDisconnectedError
@@ -262,8 +265,8 @@ class Brain:
         
         limited to names in the current namespace
         """
-        names_ = self.metadata()
-        return {x["name"]: plasma.ObjectID(x["id"]) for x in names_}
+        names_ = self.metadata().values()
+        return {x["name"]: plasma.ObjectID(x["value_id"]) for x in names_}
 
     def metadata(self, *names, output: str = "dict") -> Iterable:
         """
@@ -434,6 +437,7 @@ class Brain:
     ##########################################################################################
     def _hash(self, name: str, digest_bytes: int) -> ByteString:
         """
+        input a name str
         return a bytestring with length hex_bytes of the name string
         """
         return hashlib.blake2b(name.encode(), digest_size=digest_bytes).digest()
