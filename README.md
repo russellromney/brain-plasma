@@ -3,6 +3,7 @@
 `brain-plasma` is a high-level wrapper for the Apache Plasma PlasmaClient API with an added naming and namespacing system. Only supported on Mac/Linux with Python 3.5+.
 
 ---
+
 ## Basic Use
 
 Basic idea: the brain has a list of names that it has "learned" that are attached to objects in Plasma. Learn, recall, and delete stored objects, call it like a dictionary with bracket notation e.g. `brain['x']` and `del`.
@@ -62,11 +63,12 @@ brain.names(namespaces='all')
 6. Quickly create, switch between, and remove unique namespaces while requiring only one backend instance of `plasma_store`
 
 ## Potential use cases
-* Access small or large data objects quickly in a data-intensive application
-* Keep test values intact while restarting some process over and over again
-* Share data between callbacks in Ploty Dash (or any other Python backend)
-* Share data between Jupyter Notebooks
-* Store and persist user state values in unique namespaces server-side
+
+- Access small or large data objects quickly in a data-intensive application
+- Keep test values intact while restarting some process over and over again
+- Share data between callbacks in Ploty Dash (or any other Python backend)
+- Share data between Jupyter Notebooks
+- Store and persist user state values in unique namespaces server-side
 
 **Current Drawbacks**
 
@@ -92,7 +94,7 @@ brain.names(namespaces='all')
 - added unique intra-plasma-instance namespaces
 - `len(brain)`, `del brain['this']` and `'this' in brain` are now avilable (implemented `__len__`, `__delitem__`, and `__contains__`)
 
-NOTE: stability problems should be resolved in `v0.2`. 
+NOTE: stability problems should be resolved in `v0.2`.
 
 ## Testing
 
@@ -120,8 +122,8 @@ brain = Brain(path: str='/tmp/plasma',namespace: str='default')
 
 Parameters:
 
-* `path` - which path to use to connect to the plasma store
-* `namespace` - which namespace to use
+- `path` - which path to use to connect to the plasma store
+- `namespace` - which namespace to use
 
 ### Attributes
 
@@ -155,6 +157,7 @@ Store an item's value and recall the value with bracket notation:
 brain['this'] = 5
 x = brain['this']
 ```
+
 i.e. `Brain.__setitem__` and `Brain.__getitem__`
 
 Delete a name and its stored value like `del brain['this']`
@@ -173,13 +176,12 @@ Get the value of the object with name `name` from Plasma
 
 Delete the object in Plasma with name `name` as well as the index object
 
-
 #### Interacting with namespaces (NEW)
 
-Since `v0.2`. Lightweight namespaces within a single `plasma_store` instance. Object names are unique within namespaces but can be duplicated within namespaces. Namespaces can be created and removed at anytime along with all of their objects and names. 
+Since `v0.2`. Lightweight namespaces within a single `plasma_store` instance. Object names are unique within namespaces but can be duplicated within namespaces. Namespaces can be created and removed at anytime along with all of their objects and names.
 
-> IMPORTANT: Namespaces must be between at least 5 and no more than 15 characters. 
-This is because namespace strings are used as the prefix of the plasma.ObjectID for all objects in a given namespace, and must allow enough room for at least 6 unique random characters to ensure ObjectID uniqueness with near certainty. The namespaces set is stored in a unique namespace object with ObjectID as `plasma.ObjectID(b'brain_namespaces_set')`.
+> IMPORTANT: Namespaces must be between at least 5 and no more than 15 characters.
+> This is because namespace strings are used as the prefix of the plasma.ObjectID for all objects in a given namespace, and must allow enough room for at least 6 unique random characters to ensure ObjectID uniqueness with near certainty. The namespaces set is stored in a unique namespace object with ObjectID as `plasma.ObjectID(b'brain_namespaces_set')`.
 
 **`Brain.set_namespace(namespace=None)`**
 
@@ -187,7 +189,7 @@ Changes `self.namespace` to `namespace` and adds `namespace` to the unique names
 
 **`Brain.namespaces()`**
 
-Returns set of unique namespaces. 
+Returns set of unique namespaces.
 
 **`Brain.remove_namespace(namespace=None)`**
 
@@ -197,7 +199,7 @@ Removes namespace `namespace` and removes all of the objects in `namespace`. If 
 
 **`Brain.object_id(name: str)`**
 
-Get the ObjectId of the value of the name. 
+Get the ObjectId of the value of the name.
 
 **`Brain.object_ids()`**
 
@@ -215,22 +217,22 @@ Use `'name' in brain` as a shortcut for checking if a name is known.
 
 Get a list of all the plasma.ObjectID instances that brain knows the name of.
 
-
 **`Brain.metadata(*names, output='dict')`**
 
-Get a dictionary (or list if `output='list'`) of all the metadata for the names you list. 
+Get a dictionary (or list if `output='list'`) of all the metadata for the names you list.
 Returns a single dict if you provide only one name. Otherwise returns a list of metadata
 objects or dict of name:metadata pairs.
 
 Get the metadata dict object associated with the object with name `name`.
 
 Metadata object structure:
+
 ```
 {
-    name: str (variable name), 
-    metadata_id: bytes (bytes of the ObjectID for the index object), 
-    value_id: bytes (bytes of ObjectID for the value), 
-    description: str (False if not assigned), 
+    name: str (variable name),
+    metadata_id: bytes (bytes of the ObjectID for the index object),
+    value_id: bytes (bytes of ObjectID for the value),
+    description: str (False if not assigned),
     namespace: str (the object's namespace)
 }
 ```
@@ -258,7 +260,6 @@ Disconnect `Brain.client` from Plasma. Must use `Brain.wake_up()` to use the `Br
 **`Brain.wake_up()`**
 
 Reconnect `Brain.client` to Plasma.
-
 
 ### Exceptions
 
@@ -289,19 +290,18 @@ Apache Plasma docs: https://arrow.apache.org/docs/python/plasma.html#
 
 **TODO**
 
-* multiple assignment & get
-  * this is actually very easy, as the underlying PlasmaClient API already supports this.
-  * just need to iterate over names and objects as zip and call the basic learn for each.
-* ability to specify namespace for all class methods.
-  * this would allow you to do everything declaratively without needing another line of code
-  * right now everything uses self.namespace
-* do special things optimizing the PlasmaClient interactions with NumPy and Pandas objects
-* ability to persist items on disk and recall them with the same API
-* specify in docs or with error messages which objects cannot be used due to serialization constraints
-* ability to dump all/specific objects and name reference to a declared disk location
-  * plus ability to recover these changes later - maybe make it standard behaviour to check the standard location
-* brain logging
-
+- multiple assignment & get
+  - this is actually very easy, as the underlying PlasmaClient API already supports this.
+  - just need to iterate over names and objects as zip and call the basic learn for each.
+- ability to specify namespace for all class methods.
+  - this would allow you to do everything declaratively without needing another line of code
+  - right now everything uses self.namespace
+- do special things optimizing the PlasmaClient interactions with NumPy and Pandas objects
+- ability to persist items on disk and recall them with the same API
+- specify in docs or with error messages which objects cannot be used due to serialization constraints
+- ability to dump all/specific objects and name reference to a declared disk location
+  - plus ability to recover these changes later - maybe make it standard behaviour to check the standard location
+- brain logging
 
 ---
 
