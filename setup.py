@@ -3,12 +3,12 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'brain-plasma',
-    version = '0.3.1',
+    version = '0.3.2',
     description = 'Simple, fast shared-memory namespace on Apache Plasma',
     long_description = 'Adds variable naming and unique intra-instance namespaces to the Apache Plasma in-memory object store.',
     keywords = ' dash plasma callbacks plotly apache arrow pandas numpy redis namespace python hash',
     url = 'https://github.com/russellromney/brain-plasma',
-    download_url = 'https://github.com/russellromney/brain-plasma/archive/v0.3.1.tar.gz',
+    download_url = 'https://github.com/russellromney/brain-plasma/archive/v0.3.2.tar.gz',
     author = 'Russell Romney',
     author_email = 'russellromney@gmail.com',
     license = 'MIT',
