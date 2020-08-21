@@ -24,7 +24,7 @@ def test_init_other():
 
 
 def test_recall_not_exist(brain):
-    with pytest.raises(exceptions.BrainNameNotExistError):
+    with pytest.raises(KeyError):
         brain.recall("this")
 
 
@@ -72,7 +72,7 @@ def test_namespaces(brain):
     assert brain["this"] == "this"
 
     brain.set_namespace("default")
-    with pytest.raises(exceptions.BrainNameNotExistError):
+    with pytest.raises(KeyError):
         brain["this"]
 
 
