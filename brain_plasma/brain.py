@@ -149,10 +149,10 @@ class Brain:
         get an object value based on its Brain name
         
         Errors:
-            BrainNameNotExistError
+            KeyError
         """
         if not self.exists(name):
-            raise BrainNameNotExistError(f"Name {name} does not exist.")
+            raise KeyError(f"Name {name} does not exist.")
 
         metadata_id = self._name_to_namespace_hash(name)
         metadata = self.client.get(metadata_id, timeout_ms=100)
@@ -245,7 +245,8 @@ class Brain:
             self.client.put(5, temp)
             self.client.delete([temp])
         except:
-            raise BrainClientDisconnectedError
+            traceback.print_exc()
+            #raise BrainClientDisconnectedError
         self.bytes = self.client.store_capacity()
         self.mb = "{} MB".format(round(self.bytes / 1000000))
         return self.bytes

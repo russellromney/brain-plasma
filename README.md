@@ -269,7 +269,6 @@ v0.3 introduces custom exceptions for each type of problem the user may encounte
 
 ```python
 from brain_plasma.exceptions import (
-    BrainNameNotExistError,
     BrainNamespaceNameError,
     BrainNamespaceNotExistError,
     BrainNamespaceRemoveDefaultError,
