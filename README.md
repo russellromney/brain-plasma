@@ -1,6 +1,8 @@
 # brain-plasma
 
-`brain-plasma` is a high-level wrapper for the Apache Plasma PlasmaClient API with an added naming and namespacing system. Only supported on Mac/Linux with Python 3.5+.
+`brain-plasma` is a high-level interface for the Apache Plasma API with an added naming and namespacing system. Only supported on Mac/Linux with Python 3.5+.
+
+This allows you to very simply access very large data objects quickly in a data-intensive application without serializing to disk on every access. 
 
 ---
 
